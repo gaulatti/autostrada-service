@@ -39,6 +39,9 @@ import { AuthorizationStrategy } from './authorization.strategy';
             package: 'pompeii',
             protoPath: join(__dirname, '../proto/pompeii.proto'),
             url: configService.get<string>('POMPEII_GRPC_URL'),
+            loader: {
+              keepCase: true,
+            },
           },
         }),
         inject: [ConfigService],
