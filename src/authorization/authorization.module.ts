@@ -1,7 +1,11 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
+import { ClientsModule, Transport } from '@nestjs/microservices';
 import { PassportModule } from '@nestjs/passport';
+import { join } from 'path';
 import { DalModule } from 'src/dal/dal.module';
+import { AuthorizationService } from './authorization.service';
 import { AuthorizationStrategy } from './authorization.strategy';
 
 /**
@@ -25,8 +29,23 @@ import { AuthorizationStrategy } from './authorization.strategy';
     DalModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({}),
+    ClientsModule.registerAsync([
+      {
+        name: 'pompeii',
+        imports: [ConfigModule],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.GRPC,
+          options: {
+            package: 'pompeii',
+            protoPath: join(__dirname, '../proto/pompeii.proto'),
+            url: configService.get<string>('POMPEII_GRPC_URL'),
+          },
+        }),
+        inject: [ConfigService],
+      },
+    ]),
   ],
-  providers: [AuthorizationStrategy],
-  exports: [AuthorizationStrategy],
+  providers: [AuthorizationStrategy, AuthorizationService],
+  exports: [AuthorizationStrategy, AuthorizationService],
 })
 export class AuthorizationModule {}

@@ -1,12 +1,14 @@
 import { Injectable } from '@nestjs/common';
+import { AuthorizationService } from './authorization/authorization.service';
 
 @Injectable()
 export class AppService {
-  constructor() {}
+  constructor(private readonly authorizationService: AuthorizationService) {}
 
-  kickoff() {
+  async kickoff() {
+    const { features } = await this.authorizationService.getFeatures();
     return {
-      features: [],
+      features,
       enums: [],
       me: {
         memberships: [],

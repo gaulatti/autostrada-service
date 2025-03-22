@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package pompeii;
+
+service PompeiiService {
+  rpc GetFeaturesByApplication (GetFeaturesByApplicationRequest) returns (GetFeaturesByApplicationResponse);
+}
+
+message GetFeaturesByApplicationRequest {
+  string slug = 1;
+}
+
+message Feature {
+  string name = 1;
+  string slug = 2;
+  string default_value = 3;
+}
+
+message GetFeaturesByApplicationResponse {
+  repeated Feature features = 1;
+}

@@ -74,6 +74,8 @@ jobs:
             -e DB_DATABASE="${{ secrets.DB_DATABASE }}" \
             -e SERVICE_FQDN="${{ secrets.SERVICE_FQDN }}" \
             -e TALKBACK_FQDN="${{ secrets.TALKBACK_FQDN }}" \
+            -e POMPEII_GRPC_URL="${{ secrets.POMPEII_GRPC_URL }}" \
+            -e POMPEII_KEY="${{ secrets.POMPEII_KEY }}" \
             -e HTTP_PORT="${{ vars.HTTP_PORT }}" \
             -e GRPC_PORT="${{ vars.GRPC_PORT }}" \
             -e ASSETS_BUCKET_NAME="${{ secrets.ASSETS_BUCKET_NAME }}" \
