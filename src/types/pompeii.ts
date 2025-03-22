@@ -45,16 +45,40 @@ export type Login = {
   created_at: string;
 };
 
+export type Permission = {
+  id: number;
+  feature_id: number;
+  membership_id: number;
+  level?: 'C' | 'T1' | 'T2' | 'T3';
+};
+
+export type Team = {
+  id: number;
+  name: string;
+  slug: string;
+  // Optionally, if teams also list memberships:
+  memberships?: Membership[];
+};
+
+export type Membership = {
+  id: number;
+  users_id: number;
+  teams_id: number;
+  role: number;
+  permissions?: Permission[];
+  team?: Team;
+};
+
 export type User = {
   id: number;
   email: string;
   slug: string;
   name: string;
   last_name: string;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt: string | null;
-  logins: Login[];
+  created_at: string;
+  updated_at: string;
+  deleted_at: string | null;
+  memberships?: Membership[];
 };
 
 export type Feature = {
