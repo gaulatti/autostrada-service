@@ -3,6 +3,8 @@ import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { passportJwtSecret } from 'jwks-rsa';
 import { ExtractJwt, Strategy } from 'passport-jwt';
+import { UserIdentity } from '../types/pompeii';
+import { AuthorizationService } from './authorization.service';
 
 /**
  * Constructs the JWKS URI for a given AWS Cognito region and user pool ID.
@@ -52,7 +54,10 @@ export class AuthorizationStrategy extends PassportStrategy(Strategy) {
    *
    * The JWKS URI and issuer URL are built using the AWS region and Cognito user pool ID from the configuration service.
    */
-  constructor(configService: ConfigService) {
+  constructor(
+    configService: ConfigService,
+    private readonly authorizationService: AuthorizationService,
+  ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       secretOrKeyProvider: passportJwtSecret({
@@ -73,12 +78,16 @@ export class AuthorizationStrategy extends PassportStrategy(Strategy) {
   }
 
   /**
-   * Validates the given payload.
+   * Validates the provided user identity payload by invoking the authorization service's login method.
    *
-   * @param payload - The payload to validate.
-   * @returns The validated payload.
+   * @param payload - The user identity payload containing user-specific information.
+   * @returns A promise that resolves to the output of the authorization service's login method.
+   *
+   * @throws An error if the authorization service fails to process the login request.
    */
-  validate(payload: any) {
-    return payload as object;
+  async validate(payload: UserIdentity) {
+    const output = await this.authorizationService.login(payload);
+
+    return output;
   }
 }

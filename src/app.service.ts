@@ -1,18 +1,20 @@
 import { Injectable } from '@nestjs/common';
-import { AuthorizationService } from './authorization/authorization.service';
 
 @Injectable()
 export class AppService {
-  constructor(private readonly authorizationService: AuthorizationService) {}
+  constructor() {}
 
-  async kickoff() {
-    const { features } = await this.authorizationService.getFeatures();
+  /**
+   * Initiates a process for the given user and returns an object containing the user's data
+   * along with an empty `enums` array.
+   *
+   * @param user - The user object containing relevant data.
+   * @returns An object that merges the user's data with an empty `enums` array.
+   */
+  kickoff(user: any) {
     return {
-      features,
+      ...user,
       enums: [],
-      me: {
-        memberships: [],
-      },
     };
   }
 }
