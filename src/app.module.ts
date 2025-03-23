@@ -15,6 +15,9 @@ import { CloudWatchService } from './core/cloudwatch/cloudwatch.service';
 import { CoreModule } from './core/core.module';
 import { MetricsInterceptor } from './core/metrics/metrics.interceptor';
 import { DalModule } from './dal/dal.module';
+import { CwvController } from './junction/cwv/cwv.controller';
+import { CwvService } from './junction/cwv/cwv.service';
+import { MetricsModule } from './metrics/metrics.module';
 import { ScansModule } from './scans/scans.module';
 import { TargetsModule } from './targets/targets.module';
 /**
@@ -91,8 +94,9 @@ const secretsManager = new SecretsManagerClient();
     AuthorizationModule,
     TargetsModule,
     ScansModule,
+    MetricsModule,
   ],
-  controllers: [AppController],
+  controllers: [AppController, CwvController],
   providers: [
     AppService,
     CloudWatchService,
@@ -100,6 +104,7 @@ const secretsManager = new SecretsManagerClient();
       provide: APP_INTERCEPTOR,
       useClass: MetricsInterceptor,
     },
+    CwvService,
   ],
 })
 export class AppModule {}
