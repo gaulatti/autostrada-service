@@ -10,6 +10,7 @@ import { ProviderService } from './provider/provider.service';
 import { PulsesController } from './pulses/pulses.controller';
 import { PulsesService } from './pulses/pulses.service';
 import { DalModule } from 'src/dal/dal.module';
+import { SchedulesService } from './schedules/schedules.service';
 
 @Module({
   imports: [DalModule],
@@ -19,6 +20,7 @@ import { DalModule } from 'src/dal/dal.module';
     PlatformService,
     ProviderService,
     ProjectService,
+    SchedulesService,
   ],
   controllers: [
     HeartbeatsController,
