@@ -5,6 +5,7 @@ import { UrlsService } from 'src/targets/urls/urls.service';
 import { DeliverRequest } from 'src/types/client';
 import { nanoid } from 'src/utils/nanoid';
 import { HeartbeatsService } from '../heartbeats/heartbeats.service';
+import { Url } from 'src/models/url.model';
 
 @Injectable()
 export class PulsesService {
@@ -23,7 +24,7 @@ export class PulsesService {
     const offset = (page - 1) * pageSize;
     const limit = pageSize;
     return this.pulseModel.findAndCountAll({
-      include: [],
+      include: [Url],
       distinct: true,
       offset,
       limit,
