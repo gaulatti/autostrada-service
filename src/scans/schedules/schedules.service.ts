@@ -28,19 +28,16 @@ export class SchedulesService {
       this.client.getService<WiphalaService>('WiphalaService');
   }
 
-  @Cron(`*/10 * * * *`)
-  testSchedule() {
-    /**
-     * Uncomment this when strategy and plugins are created in Wiphala.
-     */
-    // return await firstValueFrom(
-    //   this.wiphalaService.trigger({
-    //     slug: process.env.WIPHALA_SLUG!,
-    //     context: JSON.stringify({
-    //       url: 'https://elpais.com',
-    //     }),
-    //     origin: getGrpcTalkbackEndpoint(),
-    //   }),
-    // );
+  @Cron(`*/3 * * * *`)
+  async testSchedule() {
+    await firstValueFrom(
+      this.wiphalaService.trigger({
+        slug: process.env.WIPHALA_SLUG!,
+        context: JSON.stringify({
+          url: 'https://elpais.com',
+        }),
+        origin: getGrpcTalkbackEndpoint(),
+      }),
+    );
   }
 }
