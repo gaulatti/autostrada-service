@@ -7,6 +7,27 @@ import { WiphalaService } from 'src/interfaces/wiphala.interface';
 import { JSONLogger } from 'src/utils/logger';
 import { getGrpcTalkbackEndpoint } from 'src/utils/network';
 
+/**
+ * As Carlo Conti said: Randomizzatto.
+ * This is temporary.
+ */
+const targets = [
+  'https://elpais.com/?ed=es',
+  'https://cadenaser.com',
+  'https://www.cooperativa.cl',
+  'https://www.biobiochile.cl',
+  'https://news.sky.com',
+  'https://www.swr3.de',
+  'https://www.rbb24.de',
+  'https://radiosol.cl',
+  'https://www.rainews.it',
+  'https://www.corriere.it',
+  'https://www.nytimes.com',
+  'https://www.clarin.com',
+  'https://www.ole.com.ar/?country=ar',
+  'https://www.politico.com',
+];
+
 @Injectable()
 export class SchedulesService {
   /**
@@ -34,7 +55,7 @@ export class SchedulesService {
       this.wiphalaService.trigger({
         slug: process.env.WIPHALA_SLUG!,
         context: JSON.stringify({
-          url: 'https://elpais.com',
+          url: targets[Math.floor(Math.random() * targets.length)],
         }),
         origin: getGrpcTalkbackEndpoint(),
       }),
