@@ -49,7 +49,7 @@ export class SchedulesService {
       this.client.getService<WiphalaService>('WiphalaService');
   }
 
-  @Cron(`*/5 * * * *`)
+  @Cron(`*/2 * * * *`)
   async testSchedule() {
     await firstValueFrom(
       this.wiphalaService.trigger({
