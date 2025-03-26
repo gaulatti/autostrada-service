@@ -33,7 +33,7 @@ export class PulsesController {
    */
   @GrpcMethod('ClientService', 'Deliver')
   deliver(data: DeliverRequest): DeliverResponse {
-    console.log({ data });
+    void this.pulsesService.deliver(data);
     return { success: true };
   }
 }

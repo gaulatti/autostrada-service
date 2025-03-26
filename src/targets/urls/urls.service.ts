@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Url } from 'src/models/url.model';
+import { nanoid } from 'src/utils/nanoid';
 
 @Injectable()
 export class UrlsService {
@@ -21,5 +22,23 @@ export class UrlsService {
       limit,
       order: sort ? [[sort, order]] : undefined,
     });
+  }
+
+  /**
+   * Retrieves or creates a URL instance based on the fully qualified domain name (FQDN).
+   *
+   * @param url - The fully qualified domain name (FQDN) to search for or create.
+   * @returns A promise that resolves to the URL instance. If the instance is newly created,
+   *          it will also have a generated slug.
+   */
+  async getByFQDN(url: string) {
+    const [instance, created] = await this.urlModel.findOrBuild({
+      where: { url },
+    });
+    if (created) {
+      instance.slug = nanoid();
+      await instance.save();
+    }
+    return instance;
   }
 }

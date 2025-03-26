@@ -1,6 +1,5 @@
-import { CreationOptional } from 'sequelize';
+import { Optional } from 'sequelize';
 import {
-  BelongsTo,
   Column,
   CreatedAt,
   DataType,
@@ -11,18 +10,45 @@ import {
 } from 'sequelize-typescript';
 import { Heartbeat } from './heartbeat.model';
 
+/**
+ * Define the full attributes of the model
+ */
+export interface GradeAttributes {
+  id: number;
+  heartbeats_id: number;
+  performance: number;
+  accessibility: number;
+  seo: number;
+  best_practices: number;
+  security?: number;
+  aesthetics?: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * Define the attributes needed when creating a new record
+ */
+export type GradeCreationAttributes = Optional<
+  GradeAttributes,
+  'id' | 'createdAt' | 'updatedAt'
+>;
+
 @Table({
   tableName: 'grades',
   timestamps: true,
   underscored: true,
 })
-export class Grade extends Model<Grade, CreationOptional<Grade>> {
+export class Grade
+  extends Model<GradeAttributes, GradeCreationAttributes>
+  implements GradeAttributes
+{
   @Column({
     type: DataType.INTEGER,
     primaryKey: true,
     autoIncrement: true,
   })
-  id!: CreationOptional<number>;
+  id!: number;
 
   @ForeignKey(() => Heartbeat)
   @Column({
@@ -80,7 +106,4 @@ export class Grade extends Model<Grade, CreationOptional<Grade>> {
   @UpdatedAt
   @Column({ field: 'updated_at', type: DataType.DATE })
   updatedAt!: Date;
-
-  @BelongsTo(() => Heartbeat)
-  heartbeat?: Heartbeat;
 }

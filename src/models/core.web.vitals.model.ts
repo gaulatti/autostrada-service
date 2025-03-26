@@ -1,4 +1,4 @@
-import { CreationOptional } from 'sequelize';
+import { Optional } from 'sequelize';
 import {
   BelongsTo,
   Column,
@@ -11,21 +11,47 @@ import {
 } from 'sequelize-typescript';
 import { Heartbeat } from './heartbeat.model';
 
+/**
+ * Define the full attributes of the model
+ */
+export interface CoreWebVitalsAttributes {
+  id: number;
+  heartbeats_id: number;
+  ttfb: number;
+  fcp: number;
+  dcl: number;
+  lcp: number;
+  tti: number;
+  si: number;
+  cls: string;
+  tbt: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * Define the attributes needed when creating a new record
+ */
+export type CoreWebVitalsCreationAttributes = Optional<
+  CoreWebVitalsAttributes,
+  'id' | 'createdAt' | 'updatedAt'
+>;
+
 @Table({
   tableName: 'cwv',
   timestamps: true,
   underscored: true,
 })
-export class CoreWebVitals extends Model<
-  CoreWebVitals,
-  CreationOptional<CoreWebVitals>
-> {
+export class CoreWebVitals
+  extends Model<CoreWebVitalsAttributes, CoreWebVitalsCreationAttributes>
+  implements CoreWebVitalsAttributes
+{
   @Column({
     type: DataType.INTEGER,
     primaryKey: true,
     autoIncrement: true,
   })
-  id!: CreationOptional<number>;
+  id!: number;
 
   @ForeignKey(() => Heartbeat)
   @Column({

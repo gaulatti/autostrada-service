@@ -1,4 +1,4 @@
-import { CreationOptional } from 'sequelize';
+import { Optional } from 'sequelize';
 import {
   BelongsTo,
   Column,
@@ -12,19 +12,43 @@ import {
 } from 'sequelize-typescript';
 import { Url } from './url.model';
 
+/**
+ * Full attributes for Pulse
+ */
+export interface PulseAttributes {
+  id: number;
+  url_id: number;
+  slug: string;
+  playlist_slug: string;
+  createdAt: Date;
+  updatedAt: Date;
+  deletedAt: Date | null;
+}
+
+/**
+ * Attributes required when creating a Pulse record
+ */
+export type PulseCreationAttributes = Optional<
+  PulseAttributes,
+  'id' | 'createdAt' | 'updatedAt' | 'deletedAt'
+>;
+
 @Table({
   tableName: 'pulses',
   timestamps: true,
   underscored: true,
   paranoid: true,
 })
-export class Pulse extends Model<Pulse, CreationOptional<Pulse>> {
+export class Pulse
+  extends Model<PulseAttributes, PulseCreationAttributes>
+  implements PulseAttributes
+{
   @Column({
     type: DataType.INTEGER,
     primaryKey: true,
     autoIncrement: true,
   })
-  id!: CreationOptional<number>;
+  id!: number;
 
   @ForeignKey(() => Url)
   @Column({

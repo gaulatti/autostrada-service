@@ -1,4 +1,4 @@
-import { CreationOptional } from 'sequelize';
+import { Optional } from 'sequelize';
 import {
   BelongsTo,
   Column,
@@ -13,18 +13,41 @@ import { Platform } from './platform.model';
 import { Provider } from './provider.model';
 import { Pulse } from './pulse.model';
 
+/**
+ * Define the full attributes of the model
+ */
+export interface HeartbeatAttributes {
+  id: number;
+  pulses_id: number;
+  platforms_id: number;
+  provider_id: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+/**
+ * Define the attributes needed when creating a new record
+ */
+export type HeartbeatCreationAttributes = Optional<
+  HeartbeatAttributes,
+  'id' | 'createdAt' | 'updatedAt'
+>;
+
 @Table({
   tableName: 'heartbeats',
   timestamps: true,
   underscored: true,
 })
-export class Heartbeat extends Model<Heartbeat, CreationOptional<Heartbeat>> {
+export class Heartbeat
+  extends Model<HeartbeatAttributes, HeartbeatCreationAttributes>
+  implements HeartbeatAttributes
+{
   @Column({
     type: DataType.INTEGER,
     primaryKey: true,
     autoIncrement: true,
   })
-  id!: CreationOptional<number>;
+  id!: number;
 
   @ForeignKey(() => Pulse)
   @Column({

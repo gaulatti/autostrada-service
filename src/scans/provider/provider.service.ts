@@ -24,4 +24,14 @@ export class ProviderService {
       order: sort ? [[sort, order]] : undefined,
     });
   }
+
+  /**
+   * Retrieves a provider record based on the given slug.
+   *
+   * @param slug - The unique identifier (slug) of the provider to retrieve.
+   * @returns A promise that resolves to the provider record if found, or `null` if no matching record exists.
+   */
+  async getBySlug(slug: string) {
+    return this.providerModel.findOne({ where: { slug } });
+  }
 }
