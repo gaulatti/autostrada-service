@@ -1,4 +1,4 @@
-import { Controller, Get, ParseIntPipe, Query } from '@nestjs/common';
+import { Controller, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
 import { GrpcMethod } from '@nestjs/microservices';
 import { Logger } from 'src/decorators/logger.decorator';
 import { DeliverRequest, DeliverResponse } from 'src/types/client';
@@ -23,6 +23,18 @@ export class PulsesController {
     @Query('order') order: 'asc' | 'desc',
   ) {
     return this.pulsesService.list(page, pageSize, sort, order);
+  }
+
+  @Get(':slug')
+  async get(@Param('slug') slug: string) {
+    /**
+     * TODO: Support multiple outputs, not just "mobile | desktop".
+     *
+     * Future-proofing this involves getting multiple outputs per platform type,
+     * such as android or iphone for mobile at the same time.
+     */
+    const pulse = await this.pulsesService.findBySlug(slug);
+    return { pulse };
   }
 
   /**

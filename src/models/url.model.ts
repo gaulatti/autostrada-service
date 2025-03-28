@@ -3,10 +3,13 @@ import {
   Column,
   CreatedAt,
   DataType,
+  HasMany,
   Model,
   Table,
   UpdatedAt,
 } from 'sequelize-typescript';
+import { Junction } from './junction.model';
+import { Pulse } from './pulse.model';
 
 @Table({
   tableName: 'urls',
@@ -33,6 +36,12 @@ export class Url extends Model<Url, CreationOptional<Url>> {
     unique: true,
   })
   slug!: string;
+
+  @HasMany(() => Pulse)
+  pulses!: Pulse[];
+
+  @HasMany(() => Junction)
+  junctions!: Junction[];
 
   @CreatedAt
   @Column({ field: 'created_at', type: DataType.DATE })

@@ -5,10 +5,13 @@ import {
   CreatedAt,
   DataType,
   ForeignKey,
+  HasOne,
   Model,
   Table,
   UpdatedAt,
 } from 'sequelize-typescript';
+import { CoreWebVitals } from './core.web.vitals.model';
+import { Grade } from './grade.model';
 import { Platform } from './platform.model';
 import { Provider } from './provider.model';
 import { Pulse } from './pulse.model';
@@ -69,6 +72,12 @@ export class Heartbeat
     allowNull: false,
   })
   provider_id!: number;
+
+  @HasOne(() => Grade)
+  grades!: Grade;
+
+  @HasOne(() => CoreWebVitals)
+  cwv!: CoreWebVitals;
 
   @CreatedAt
   @Column({ field: 'created_at', type: DataType.DATE })

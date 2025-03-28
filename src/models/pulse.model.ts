@@ -6,11 +6,13 @@ import {
   DataType,
   DeletedAt,
   ForeignKey,
+  HasMany,
   Model,
   Table,
   UpdatedAt,
 } from 'sequelize-typescript';
 import { Url } from './url.model';
+import { Heartbeat } from './heartbeat.model';
 
 /**
  * Full attributes for Pulse
@@ -82,6 +84,9 @@ export class Pulse
   @DeletedAt
   @Column({ field: 'deleted_at', type: DataType.DATE })
   deletedAt!: Date;
+
+  @HasMany(() => Heartbeat)
+  heartbeats!: Heartbeat[];
 
   @BelongsTo(() => Url)
   url?: Url;
