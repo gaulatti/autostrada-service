@@ -20,6 +20,7 @@ const targets = [
   'https://www.swr3.de',
   'https://www.rbb24.de',
   'https://radiosol.cl',
+  'https://soyantofagasta.cl',
   'https://www.rainews.it',
   'https://www.corriere.it',
   'https://www.nytimes.com',
