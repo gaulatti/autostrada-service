@@ -84,8 +84,7 @@ export class PulsesService {
     );
     if (slot) {
       slot.output.forEach(
-        (item) =>
-          void this.heartbeatsService.create(pulse, item.simplifiedFile),
+        (item) => void this.heartbeatsService.create(pulse, item),
       );
     }
   }
