@@ -61,15 +61,6 @@ export class PulsesService {
       },
     } = JSON.parse(data.payload);
 
-    const {
-      output: {
-        mobile: { simplifiedFile: mobile },
-        desktop: { simplifiedFile: desktop },
-      },
-    } = sequence.find(
-      (item: { name: string }) => item.name === 'AutostradaProcess',
-    );
-
     /**
      * URL
      */
@@ -87,8 +78,16 @@ export class PulsesService {
     /**
      * Create heartbeats with metrics.
      */
-    void this.heartbeatsService.create(pulse, mobile);
-    void this.heartbeatsService.create(pulse, desktop);
+
+    const slot = sequence.find(
+      (item: { name: string }) => item.name === 'AutostradaProcess',
+    );
+    if (slot) {
+      slot.output.forEach(
+        (item) =>
+          void this.heartbeatsService.create(pulse, item.simplifiedFile),
+      );
+    }
   }
 
   async findBySlug(slug: string) {
