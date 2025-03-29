@@ -2,9 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { CwvService } from 'src/metrics/cwv/cwv.service';
 import { GradesService } from 'src/metrics/grades/grades.service';
+import { CoreWebVitals } from 'src/models/core.web.vitals.model';
+import { Grade } from 'src/models/grade.model';
 import { Heartbeat } from 'src/models/heartbeat.model';
+import { Platform } from 'src/models/platform.model';
+import { Provider } from 'src/models/provider.model';
 import { Pulse } from 'src/models/pulse.model';
-import { nanoid } from 'src/utils/nanoid';
+import { Url } from 'src/models/url.model';
 import { PlatformService } from '../platform/platform.service';
 import { ProviderService } from '../provider/provider.service';
 
@@ -32,6 +36,19 @@ export class HeartbeatsService {
       offset,
       limit,
       order: sort ? [[sort, order]] : undefined,
+    });
+  }
+
+  async get(slug: string) {
+    return this.heartbeatModel.findOne({
+      where: { slug },
+      include: [
+        Platform,
+        Provider,
+        CoreWebVitals,
+        Grade,
+        { model: Pulse, include: [Url] },
+      ],
     });
   }
 
