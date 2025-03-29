@@ -24,6 +24,7 @@ export interface HeartbeatAttributes {
   pulses_id: number;
   platforms_id: number;
   provider_id: number;
+  slug: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -33,7 +34,7 @@ export interface HeartbeatAttributes {
  */
 export type HeartbeatCreationAttributes = Optional<
   HeartbeatAttributes,
-  'id' | 'createdAt' | 'updatedAt'
+  'id' | 'createdAt' | 'updatedAt' | 'slug'
 >;
 
 @Table({
@@ -72,6 +73,13 @@ export class Heartbeat
     allowNull: false,
   })
   provider_id!: number;
+
+  @Column({
+    type: DataType.STRING(36),
+    allowNull: false,
+    unique: true,
+  })
+  slug!: string;
 
   @HasOne(() => Grade)
   grades!: Grade;

@@ -4,6 +4,7 @@ import { CwvService } from 'src/metrics/cwv/cwv.service';
 import { GradesService } from 'src/metrics/grades/grades.service';
 import { Heartbeat } from 'src/models/heartbeat.model';
 import { Pulse } from 'src/models/pulse.model';
+import { nanoid } from 'src/utils/nanoid';
 import { PlatformService } from '../platform/platform.service';
 import { ProviderService } from '../provider/provider.service';
 
@@ -80,6 +81,7 @@ export class HeartbeatsService {
       pulses_id: pulse.id,
       platforms_id: platform.id,
       provider_id: provider!.id,
+      slug: nanoid(),
     });
 
     /**
