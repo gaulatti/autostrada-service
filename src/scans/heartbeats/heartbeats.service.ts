@@ -58,10 +58,7 @@ export class HeartbeatsService {
      * @param platform - The platform context to use for the lookup.
      * @returns A promise that resolves to the platform information corresponding to the user agent.
      */
-    const platform = await this.platformsService.getByUserAgent(
-      data.userAgent,
-      data.mode,
-    );
+    const platform = await this.platformsService.getByUserAgent(data.userAgent);
 
     /**
      * Provider.

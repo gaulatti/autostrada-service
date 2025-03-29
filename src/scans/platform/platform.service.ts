@@ -33,15 +33,28 @@ export class PlatformService {
    * @param userAgent - The user agent string to search for or create a platform instance.
    * @returns A promise that resolves to the platform instance.
    */
-  async getByUserAgent(userAgent: string, type: 'desktop' | 'mobile') {
+  async getByUserAgent(userAgent: string) {
     const [instance, created] = await this.platformModel.findOrBuild({
       where: { user_agent: userAgent },
     });
     if (created) {
       instance.slug = nanoid();
-      instance.type = type;
+      instance.type = this.getUserAgentType(userAgent);
       await instance.save();
     }
     return instance;
   }
+
+  /**
+   * Determines the type of device based on the provided user agent string.
+   *
+   * @param userAgent - The user agent string to evaluate.
+   * @returns `'mobile'` if the user agent matches common mobile device patterns,
+   *          otherwise `'desktop'`.
+   */
+  private getUserAgentType = (userAgent: string): 'mobile' | 'desktop' => {
+    const mobileRegex =
+      /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i;
+    return mobileRegex.test(userAgent) ? 'mobile' : 'desktop';
+  };
 }
