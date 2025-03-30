@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
+import { Op } from 'sequelize';
 import { CoreWebVitals } from 'src/models/core.web.vitals.model';
 import { Grade } from 'src/models/grade.model';
 import { Heartbeat } from 'src/models/heartbeat.model';
@@ -10,6 +11,13 @@ import { Url } from 'src/models/url.model';
 import { UrlsService } from 'src/targets/urls/urls.service';
 import { DeliverRequest } from 'src/types/client';
 import { nanoid } from 'src/utils/nanoid';
+import {
+  getAveragePerformance,
+  getGradeStability,
+  getPlatformDifferences,
+  getUrlsMonitored,
+  StabilityObject,
+} from 'src/utils/stats';
 import { HeartbeatsService } from '../heartbeats/heartbeats.service';
 
 @Injectable()
@@ -20,21 +28,102 @@ export class PulsesService {
     private readonly urlService: UrlsService,
   ) {}
 
+  /**
+   * Retrieves a paginated list of pulses with optional sorting and filtering by date range.
+   *
+   * @param page - The current page number (1-based index).
+   * @param pageSize - The number of items per page.
+   * @param sort - The field to sort the results by.
+   * @param order - The sorting order, either 'asc' for ascending or 'desc' for descending.
+   * @param from - The start date for filtering pulses by their creation date.
+   * @param to - The end date for filtering pulses by their creation date.
+   * @returns A promise that resolves to an object containing the total count of pulses (`count`)
+   *          and an array of pulse records (`rows`), each including their slug, creation date,
+   *          update date, and associated URL details.
+   */
   async list(
     page: number,
     pageSize: number,
     sort: string,
     order: 'asc' | 'desc',
+    from: Date,
+    to: Date,
   ): Promise<{ count: number; rows: any[] }> {
     const offset = (page - 1) * pageSize;
     const limit = pageSize;
     return this.pulseModel.findAndCountAll({
-      include: [Url],
+      where: {
+        createdAt: {
+          [Op.between]: [from, to],
+        },
+      },
+      attributes: ['slug', 'createdAt', 'updatedAt'],
+      include: [{ model: Url, attributes: ['slug', 'url'] }],
       distinct: true,
       offset,
       limit,
       order: sort ? [[sort, order]] : undefined,
     });
+  }
+
+  /**
+   * Retrieves statistical data for pulses within a specified date range.
+   *
+   * @param from - The start date of the range to filter pulses.
+   * @param to - The end date of the range to filter pulses.
+   * @returns An object containing the following statistical information:
+   * - `totalPulses`: The total number of pulses within the date range.
+   * - `averagePerformance`: The average performance score of the pulses.
+   * - `urlsMonitored`: The number of unique URLs monitored in the pulses.
+   * - `lastPulse`: The timestamp of the most recent pulse in the range.
+   * - `stability`: An object containing stability data:
+   *   - `mobile`: The top 3 mobile stability variations.
+   *   - `desktop`: The top 3 desktop stability variations.
+   *   - `differences`: The top 3 platform differences in stability.
+   */
+  async stats(from: Date, to: Date) {
+    const pulses = await this.pulseModel.findAll({
+      where: {
+        createdAt: {
+          [Op.between]: [from, to],
+        },
+      },
+      attributes: ['id', 'updatedAt'],
+      order: [['id', 'desc']],
+      include: [
+        { model: Url, attributes: ['url', 'slug'] },
+        {
+          model: Heartbeat,
+          attributes: ['id'],
+          include: [{ model: Grade }, { model: Platform }],
+        },
+      ],
+    });
+
+    const totalPulses = pulses.length;
+    const averagePerformance = getAveragePerformance(pulses);
+    const urlsMonitored = getUrlsMonitored(pulses);
+    const lastPulse = pulses[0]?.updatedAt;
+
+    const stability: StabilityObject = {
+      desktop: getGradeStability(pulses, 'desktop'),
+      mobile: getGradeStability(pulses, 'mobile'),
+    };
+
+    stability.desktop.sort((a, b) => a.variation! - b.variation!);
+    stability.mobile.sort((a, b) => a.variation! - b.variation!);
+
+    return {
+      totalPulses,
+      averagePerformance,
+      urlsMonitored,
+      lastPulse,
+      stability: {
+        mobile: stability.mobile.slice(0, 3),
+        desktop: stability.desktop.slice(0, 3),
+        differences: getPlatformDifferences(stability).slice(0, 3),
+      },
+    };
   }
 
   /**

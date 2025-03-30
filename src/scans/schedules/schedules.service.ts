@@ -41,6 +41,11 @@ export class SchedulesService {
   constructor(@Inject('wiphala') private readonly client: ClientGrpc) {}
 
   /**
+   * Temporary until cluster schedules are implemented.
+   */
+  counter = 0;
+
+  /**
    * Lifecycle hook that is called when the module is initialized.
    * This method retrieves and assigns the WiphalaService instance
    * from the client to the `WiphalaService` property.
@@ -50,16 +55,18 @@ export class SchedulesService {
       this.client.getService<WiphalaService>('WiphalaService');
   }
 
-  @Cron(`*/2 * * * *`)
-  async testSchedule() {
-    await firstValueFrom(
+  @Cron(`* * * * *`)
+  testSchedule() {
+    void firstValueFrom(
       this.wiphalaService.trigger({
         slug: process.env.WIPHALA_SLUG!,
         context: JSON.stringify({
-          url: targets[Math.floor(Math.random() * targets.length)],
+          url: targets[this.counter],
         }),
         origin: getGrpcTalkbackEndpoint(),
       }),
     );
+
+    this.counter++;
   }
 }
