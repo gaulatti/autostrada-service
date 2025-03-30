@@ -67,6 +67,13 @@ export class SchedulesService {
       }),
     );
 
+    /**
+     * Hack the planet!
+     * https://www.youtube.com/watch?v=5T_CqqjOPDc
+     */
     this.counter++;
+    if (this.counter == targets.length) {
+      this.counter = 0;
+    }
   }
 }
