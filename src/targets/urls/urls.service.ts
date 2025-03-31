@@ -41,4 +41,14 @@ export class UrlsService {
     }
     return instance;
   }
+
+  /**
+   * Retrieves a URL record based on the provided slug.
+   *
+   * @param slug - The unique identifier for the URL to retrieve.
+   * @returns A promise that resolves to the URL record if found, or `null` if no record matches the slug.
+   */
+  async get(slug: string) {
+    return this.urlModel.findOne({ where: { slug } });
+  }
 }

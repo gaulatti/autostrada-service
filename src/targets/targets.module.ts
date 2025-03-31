@@ -1,5 +1,6 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { DalModule } from 'src/dal/dal.module';
+import { ScansModule } from 'src/scans/scans.module';
 import { ClustersController } from './clusters/clusters.controller';
 import { ClustersService } from './clusters/clusters.service';
 import { JunctionController } from './junction/junction.controller';
@@ -8,7 +9,7 @@ import { UrlsController } from './urls/urls.controller';
 import { UrlsService } from './urls/urls.service';
 
 @Module({
-  imports: [DalModule],
+  imports: [DalModule, forwardRef(() => ScansModule)],
   providers: [ClustersService, UrlsService, JunctionService],
   controllers: [UrlsController, ClustersController, JunctionController],
   exports: [ClustersService, UrlsService, JunctionService],

@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { join } from 'path';
@@ -39,7 +39,7 @@ import { SchedulesService } from './schedules/schedules.service';
     ]),
     DalModule,
     MetricsModule,
-    TargetsModule,
+    forwardRef(() => TargetsModule),
   ],
   providers: [
     PulsesService,
@@ -56,5 +56,6 @@ import { SchedulesService } from './schedules/schedules.service';
     ProjectController,
     ProviderController,
   ],
+  exports: [PulsesService],
 })
 export class ScansModule {}

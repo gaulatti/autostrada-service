@@ -48,11 +48,13 @@ export class PulsesService {
     order: 'asc' | 'desc',
     from: Date,
     to: Date,
+    where?: any,
   ): Promise<{ count: number; rows: any[] }> {
     const offset = (page - 1) * pageSize;
     const limit = pageSize;
     return this.pulseModel.findAndCountAll({
       where: {
+        ...where,
         createdAt: {
           [Op.between]: [from, to],
         },
@@ -81,9 +83,10 @@ export class PulsesService {
    *   - `desktop`: The top 3 desktop stability variations.
    *   - `differences`: The top 3 platform differences in stability.
    */
-  async stats(from: Date, to: Date) {
+  async stats(from: Date, to: Date, where?: any) {
     const pulses = await this.pulseModel.findAll({
       where: {
+        ...where,
         createdAt: {
           [Op.between]: [from, to],
         },
