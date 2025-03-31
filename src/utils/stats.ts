@@ -383,6 +383,44 @@ const getHistory = (heartbeats: Heartbeat[]) => {
   };
 };
 
+/**
+ * Filters the `mobile` and `desktop` arrays in a `StabilityObject` to remove items
+ * with a number of grades below a calculated minimum threshold.
+ *
+ * The minimum threshold is determined as half of the median value of the grades' lengths
+ * for each respective array (`mobile` and `desktop`).
+ *
+ * This function ensures that only URLs with a sufficient number of datapoints are considered
+ * for stability statistics, avoiding skewed rankings due to insufficient data.
+ *
+ * You must be "this" tall to ride this ride.
+ *
+ * @param stability - The `StabilityObject` containing `mobile` and `desktop` arrays to be filtered.
+ * @returns The updated `StabilityObject` with filtered `mobile` and `desktop` arrays.
+ */
+const minDatapointsFilter = (stability: StabilityObject) => {
+  const mobileCount = stability.mobile.map((item) => item.grades.length);
+  mobileCount.sort((a, b) => Number(a) - Number(b));
+  const minMobile = mobileCount[Math.round(mobileCount.length / 2)] / 2;
+
+  if (!isNaN(minMobile)) {
+    stability.mobile = stability.mobile.filter(
+      (item) => item.grades.length >= minMobile,
+    );
+  }
+
+  const desktopCount = stability.desktop.map((item) => item.grades.length);
+  desktopCount.sort((a, b) => Number(a) - Number(b));
+  const minDesktop = desktopCount[Math.round(desktopCount.length / 2)] / 2;
+
+  if (!isNaN(minDesktop)) {
+    stability.desktop = stability.desktop.filter(
+      (item) => item.grades.length >= minDesktop,
+    );
+  }
+  return stability;
+};
+
 export {
   getAveragePerformance,
   getGradesDistribution,
@@ -391,4 +429,5 @@ export {
   getPlatformDifferences,
   getTimeOfDayPerformance,
   getUrlsMonitored,
+  minDatapointsFilter,
 };

@@ -61,4 +61,19 @@ export class UrlsController {
       },
     );
   }
+
+  /**
+   * Retrieves statistical data for urls within a specified date range.
+   *
+   * @param from - The start date for the statistics query. Defaults to the current date if not provided.
+   * @param to - The end date for the statistics query. Defaults to the current date if not provided.
+   * @returns A promise resolving to the statistical data for the specified date range.
+   */
+  @Get('/stats')
+  stats(
+    @Query('from') from: Date = new Date(),
+    @Query('to') to: Date = new Date(),
+  ) {
+    return this.urlsService.stats(from, to);
+  }
 }

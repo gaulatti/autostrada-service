@@ -19,6 +19,7 @@ import {
   getPlatformDifferences,
   getTimeOfDayPerformance,
   getUrlsMonitored,
+  minDatapointsFilter,
   StabilityObject,
 } from 'src/utils/stats';
 import { HeartbeatsService } from '../heartbeats/heartbeats.service';
@@ -87,31 +88,14 @@ export class PulsesService {
    *   - `differences`: The top 3 platform differences in stability.
    */
   async stats(from: Date, to: Date, where?: any) {
-    const pulses = await this.pulseModel.findAll({
-      where: {
-        ...where,
-        createdAt: {
-          [Op.between]: [from, to],
-        },
-      },
-      attributes: ['id', 'updatedAt'],
-      order: [['id', 'desc']],
-      include: [
-        { model: Url, attributes: ['url', 'slug'] },
-        {
-          model: Heartbeat,
-          attributes: ['id', 'updatedAt'],
-          include: [CoreWebVitals, Grade, Platform],
-        },
-      ],
-    });
+    const pulses = await this.findForStats(from, to, where);
 
     const totalPulses = pulses.length;
     const averagePerformance = getAveragePerformance(pulses);
     const urlsMonitored = getUrlsMonitored(pulses);
     const lastPulse = pulses[0]?.updatedAt;
 
-    const stability: StabilityObject = {
+    let stability: StabilityObject = {
       desktop: getGradeStability(pulses, 'desktop'),
       mobile: getGradeStability(pulses, 'mobile'),
     };
@@ -126,25 +110,7 @@ export class PulsesService {
      * This is to avoid ranking urls where there are minimum datapoints.
      */
     if (!where) {
-      const mobileCount = stability.mobile.map((item) => item.grades.length);
-      mobileCount.sort((a, b) => Number(a) - Number(b));
-      const minMobile = mobileCount[Math.round(mobileCount.length / 2)] / 2;
-
-      if (!isNaN(minMobile)) {
-        stability.mobile = stability.mobile.filter(
-          (item) => item.grades.length >= minMobile,
-        );
-      }
-
-      const desktopCount = stability.desktop.map((item) => item.grades.length);
-      desktopCount.sort((a, b) => Number(a) - Number(b));
-      const minDesktop = desktopCount[Math.round(desktopCount.length / 2)] / 2;
-
-      if (!isNaN(minDesktop)) {
-        stability.desktop = stability.desktop.filter(
-          (item) => item.grades.length >= minDesktop,
-        );
-      }
+      stability = minDatapointsFilter(stability);
     }
 
     /**
@@ -166,6 +132,41 @@ export class PulsesService {
       grades: getGradesDistribution(heartbeats),
       history: getHistory(heartbeats),
     };
+  }
+
+  /**
+   * Retrieves pulse records within a specified date range, optionally filtered by additional conditions.
+   *
+   * @param from - The start date of the range to filter records.
+   * @param to - The end date of the range to filter records.
+   * @param where - Optional additional filtering conditions.
+   * @returns A promise that resolves to an array of pulse records, including associated URLs and heartbeats.
+   *
+   * The returned records include:
+   * - `id` and `updatedAt` attributes of the pulse.
+   * - Associated `Url` model with `url` and `slug` attributes.
+   * - Associated `Heartbeat` model with `id` and `updatedAt` attributes,
+   *   and its nested associations: `CoreWebVitals`, `Grade`, and `Platform`.
+   */
+  async findForStats(from: Date, to: Date, where?: any) {
+    return this.pulseModel.findAll({
+      where: {
+        ...where,
+        createdAt: {
+          [Op.between]: [from, to],
+        },
+      },
+      attributes: ['id', 'updatedAt'],
+      order: [['id', 'desc']],
+      include: [
+        { model: Url, attributes: ['url', 'slug'] },
+        {
+          model: Heartbeat,
+          attributes: ['id', 'updatedAt'],
+          include: [CoreWebVitals, Grade, Platform],
+        },
+      ],
+    });
   }
 
   /**
