@@ -221,9 +221,7 @@ const extractTimeOfDay = (item: Heartbeat) => {
  *          - `mobile`: Time of day data extracted from heartbeats on mobile platforms.
  *          - `desktop`: Time of day data extracted from heartbeats on desktop platforms.
  */
-const getTimeOfDayPerformance = (pulses: Pulse[]) => {
-  const heartbeats = pulses.flatMap((pulse) => pulse.heartbeats);
-
+const getTimeOfDayPerformance = (heartbeats: Heartbeat[]) => {
   const mobile = heartbeats
     .filter((heartbeat) => heartbeat.platform?.type == 'mobile')
     .map(extractTimeOfDay);
@@ -265,9 +263,7 @@ const categories = [
  * - The average grade for each category is calculated and rounded to the nearest integer.
  * - If no grades are available for a category, the average is set to `0`.
  */
-const getGradesDistribution = (pulses: Pulse[]) => {
-  const heartbeats = pulses.flatMap((pulse) => pulse.heartbeats);
-
+const getGradesDistribution = (heartbeats: Heartbeat[]) => {
   /**
    * Collect metrics p/category for mobile.
    */
@@ -339,10 +335,59 @@ const getGradesDistribution = (pulses: Pulse[]) => {
   return gradesData;
 };
 
+/**
+ * Transforms a `Heartbeat` object containing Core Web Vitals (CWV) data into a history object.
+ *
+ * @param {Heartbeat} param0 - An object containing the `cwv` property with Core Web Vitals data.
+ * @returns {Object} A history object containing the following properties:
+ * - `date` (Date): The last updated timestamp of the CWV data.
+ * - `ttfb` (number): Time to First Byte.
+ * - `fcp` (number): First Contentful Paint.
+ * - `dcl` (number): DOM Content Loaded.
+ * - `lcp` (number): Largest Contentful Paint.
+ * - `tti` (number): Time to Interactive.
+ * - `si` (number): Speed Index.
+ * - `cls` (number): Cumulative Layout Shift.
+ * - `tbt` (number): Total Blocking Time.
+ */
+const cwvToHistory = ({ cwv }: Heartbeat) => {
+  return {
+    date: cwv.updatedAt,
+    ttfb: cwv.ttfb,
+    fcp: cwv.fcp,
+    dcl: cwv.dcl,
+    lcp: cwv.lcp,
+    tti: cwv.tti,
+    si: cwv.si,
+    cls: cwv.cls,
+    tbt: cwv.tbt,
+  };
+};
+
+/**
+ * Processes an array of heartbeats and categorizes them into desktop and mobile histories.
+ *
+ * @param heartbeats - An array of `Heartbeat` objects to be processed.
+ * @returns An object containing two arrays:
+ * - `desktop`: An array of processed desktop heartbeats.
+ * - `mobile`: An array of processed mobile heartbeats.
+ */
+const getHistory = (heartbeats: Heartbeat[]) => {
+  return {
+    desktop: heartbeats
+      .filter((heartbeat) => heartbeat.platform?.type === 'desktop')
+      .map(cwvToHistory),
+    mobile: heartbeats
+      .filter((heartbeat) => heartbeat.platform?.type === 'mobile')
+      .map(cwvToHistory),
+  };
+};
+
 export {
   getAveragePerformance,
   getGradesDistribution,
   getGradeStability,
+  getHistory,
   getPlatformDifferences,
   getTimeOfDayPerformance,
   getUrlsMonitored,

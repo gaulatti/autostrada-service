@@ -15,6 +15,7 @@ import {
   getAveragePerformance,
   getGradesDistribution,
   getGradeStability,
+  getHistory,
   getPlatformDifferences,
   getTimeOfDayPerformance,
   getUrlsMonitored,
@@ -100,7 +101,7 @@ export class PulsesService {
         {
           model: Heartbeat,
           attributes: ['id', 'updatedAt'],
-          include: [{ model: Grade }, { model: Platform }],
+          include: [CoreWebVitals, Grade, Platform],
         },
       ],
     });
@@ -146,6 +147,11 @@ export class PulsesService {
       }
     }
 
+    /**
+     * Most stats rely on the pool of heartbeats, let's flat them once.
+     */
+    const heartbeats = pulses.flatMap((pulse) => pulse.heartbeats);
+
     return {
       totalPulses,
       averagePerformance,
@@ -156,8 +162,9 @@ export class PulsesService {
         desktop: stability.desktop.slice(0, 3),
         differences: getPlatformDifferences(stability).slice(0, 3),
       },
-      timeOfDay: getTimeOfDayPerformance(pulses),
-      grades: getGradesDistribution(pulses),
+      timeOfDay: getTimeOfDayPerformance(heartbeats),
+      grades: getGradesDistribution(heartbeats),
+      history: getHistory(heartbeats),
     };
   }
 
