@@ -15,6 +15,7 @@ import {
   getAveragePerformance,
   getGradeStability,
   getPlatformDifferences,
+  getTimeOfDayPerformance,
   getUrlsMonitored,
   StabilityObject,
 } from 'src/utils/stats';
@@ -97,7 +98,7 @@ export class PulsesService {
         { model: Url, attributes: ['url', 'slug'] },
         {
           model: Heartbeat,
-          attributes: ['id'],
+          attributes: ['id', 'updatedAt'],
           include: [{ model: Grade }, { model: Platform }],
         },
       ],
@@ -154,6 +155,7 @@ export class PulsesService {
         desktop: stability.desktop.slice(0, 3),
         differences: getPlatformDifferences(stability).slice(0, 3),
       },
+      timeOfDay: getTimeOfDayPerformance(pulses),
     };
   }
 

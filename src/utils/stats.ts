@@ -1,3 +1,4 @@
+import { Heartbeat } from 'src/models/heartbeat.model';
 import { Pulse } from 'src/models/pulse.model';
 
 export interface StabilityData {
@@ -184,9 +185,59 @@ const getPlatformDifferences = (
   return differences;
 };
 
+/**
+ * Extracts and formats time-related information from a Heartbeat object.
+ *
+ * @param item - The Heartbeat object containing the `updatedAt` timestamp and `grades.performance` data.
+ * @returns An object containing:
+ *   - `date`: The formatted date string in the format `YYYY-MM-DD`.
+ *   - `hour`: The formatted time string in the format `HH:mm`.
+ *   - `timeDecimal`: The time represented as a decimal value (hours + minutes/60).
+ *   - `performance`: The performance grade from the Heartbeat object.
+ */
+const extractTimeOfDay = (item: Heartbeat) => {
+  const hours = item.updatedAt.getHours();
+  const minutes = item.updatedAt.getMinutes();
+  const timeDecimal = hours + minutes / 60;
+
+  const year = item.updatedAt.getFullYear();
+  const month = (item.updatedAt.getMonth() + 1).toString().padStart(2, '0');
+  const day = item.updatedAt.getDate().toString().padStart(2, '0');
+  const date = `${year}-${month}-${day}`;
+  return {
+    date,
+    hour: `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`,
+    timeDecimal,
+    performance: item.grades.performance,
+  };
+};
+
+/**
+ * Analyzes the performance of heartbeats based on the time of day, categorized by platform type.
+ *
+ * @param pulses - An array of `Pulse` objects, each containing heartbeats and their associated data.
+ * @returns An object containing two arrays:
+ *          - `mobile`: Time of day data extracted from heartbeats on mobile platforms.
+ *          - `desktop`: Time of day data extracted from heartbeats on desktop platforms.
+ */
+const getTimeOfDayPerformance = (pulses: Pulse[]) => {
+  const heartbeats = pulses.flatMap((pulse) => pulse.heartbeats);
+
+  const mobile = heartbeats
+    .filter((heartbeat) => heartbeat.platform?.type == 'mobile')
+    .map(extractTimeOfDay);
+
+  const desktop = heartbeats
+    .filter((heartbeat) => heartbeat.platform?.type == 'desktop')
+    .map(extractTimeOfDay);
+
+  return { mobile, desktop };
+};
+
 export {
   getAveragePerformance,
   getGradeStability,
   getPlatformDifferences,
+  getTimeOfDayPerformance,
   getUrlsMonitored,
 };
