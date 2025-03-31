@@ -1,6 +1,7 @@
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { Controller, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
 import { Logger } from 'src/decorators/logger.decorator';
+import { Public } from 'src/decorators/public.decorator';
 import { JSONLogger } from 'src/utils/logger';
 import { streamToString } from 'src/utils/s3';
 import { Readable } from 'stream';
@@ -32,6 +33,7 @@ export class HeartbeatsController {
   }
 
   @Get(':slug')
+  @Public()
   async get(@Param('slug') slug: string) {
     const heartbeat = await this.heartbeatsService.get(slug);
     const date = new Date(heartbeat!.createdAt);

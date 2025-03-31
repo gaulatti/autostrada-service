@@ -1,6 +1,7 @@
 import { Controller, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
 import { GrpcMethod } from '@nestjs/microservices';
 import { Logger } from 'src/decorators/logger.decorator';
+import { Public } from 'src/decorators/public.decorator';
 import { DeliverRequest, DeliverResponse } from 'src/types/client';
 import { JSONLogger } from 'src/utils/logger';
 import { PulsesService } from './pulses.service';
@@ -27,6 +28,7 @@ export class PulsesController {
    * @returns A list of pulses based on the provided query parameters.
    */
   @Get()
+  @Public()
   list(
     @Query('page', ParseIntPipe) page: number,
     @Query('pageSize', ParseIntPipe) pageSize: number,
@@ -46,6 +48,7 @@ export class PulsesController {
    * @returns A promise resolving to the statistical data for the specified date range.
    */
   @Get('/stats')
+  @Public()
   async stats(
     @Query('from') from: Date = new Date(),
     @Query('to') to: Date = new Date(),
@@ -65,6 +68,7 @@ export class PulsesController {
    * such as specific outputs for Android or iPhone under the "mobile" category.
    */
   @Get(':slug')
+  @Public()
   async get(@Param('slug') slug: string) {
     /**
      * TODO: Support multiple outputs, not just "mobile | desktop".

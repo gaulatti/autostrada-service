@@ -1,5 +1,6 @@
 import { Controller, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
 import { Logger } from 'src/decorators/logger.decorator';
+import { Public } from 'src/decorators/public.decorator';
 import { PulsesService } from 'src/scans/pulses/pulses.service';
 import { JSONLogger } from 'src/utils/logger';
 import { UrlsService } from './urls.service';
@@ -18,6 +19,7 @@ export class UrlsController {
   private readonly logger!: JSONLogger;
 
   @Get()
+  @Public()
   list(
     @Query('page', ParseIntPipe) page: number,
     @Query('pageSize', ParseIntPipe) pageSize: number,
@@ -28,6 +30,7 @@ export class UrlsController {
   }
 
   @Get(':slug')
+  @Public()
   async find(
     @Param('slug') slug: string,
     @Query('from') from: Date = new Date(),
@@ -39,6 +42,7 @@ export class UrlsController {
   }
 
   @Get(':slug/pulses')
+  @Public()
   async pulses(
     @Param('slug') slug: string,
     @Query('page', ParseIntPipe) page: number,
@@ -70,6 +74,7 @@ export class UrlsController {
    * @returns A promise resolving to the statistical data for the specified date range.
    */
   @Get('/stats')
+  @Public()
   stats(
     @Query('from') from: Date = new Date(),
     @Query('to') to: Date = new Date(),

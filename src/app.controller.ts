@@ -1,6 +1,7 @@
 import { Controller, Get } from '@nestjs/common';
 import { AppService } from './app.service';
 import { CurrentUserContext } from './decorators/current.user.decorator';
+import { Public } from './decorators/public.decorator';
 
 @Controller()
 export class AppController {
@@ -13,6 +14,7 @@ export class AppController {
    * @returns The result of the kickoff process, as handled by the `appService.kickoff` method.
    */
   @Get()
+  @Public()
   kickoff(@CurrentUserContext() user: any) {
     return this.appService.kickoff(user);
   }
