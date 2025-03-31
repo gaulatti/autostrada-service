@@ -205,6 +205,7 @@ const extractTimeOfDay = (item: Heartbeat) => {
   const day = item.updatedAt.getDate().toString().padStart(2, '0');
   const date = `${year}-${month}-${day}`;
   return {
+    slug: item.slug,
     date,
     hour: `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`,
     timeDecimal,

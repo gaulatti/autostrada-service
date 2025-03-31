@@ -35,7 +35,7 @@ export class UrlsController {
   ): Promise<{ [key: string]: any }> {
     const url = await this.urlsService.get(slug);
     const stats = await this.pulsesService.stats(from, to, { url_id: url!.id });
-    return { ...url, stats };
+    return { ...url!.toJSON(), stats };
   }
 
   @Get(':slug/pulses')
