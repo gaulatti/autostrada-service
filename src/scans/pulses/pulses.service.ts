@@ -116,6 +116,34 @@ export class PulsesService {
     stability.desktop.sort((a, b) => a.variation! - b.variation!);
     stability.mobile.sort((a, b) => a.variation! - b.variation!);
 
+    /**
+     * For stability stats: You must be "this"
+     * tall to ride this ride.
+     *
+     * This is to avoid ranking urls where there are minimum datapoints.
+     */
+    if (!where) {
+      const mobileCount = stability.mobile.map((item) => item.grades.length);
+      mobileCount.sort((a, b) => Number(a) - Number(b));
+      const minMobile = mobileCount[Math.round(mobileCount.length / 2)] / 2;
+
+      if (!isNaN(minMobile)) {
+        stability.mobile = stability.mobile.filter(
+          (item) => item.grades.length >= minMobile,
+        );
+      }
+
+      const desktopCount = stability.desktop.map((item) => item.grades.length);
+      desktopCount.sort((a, b) => Number(a) - Number(b));
+      const minDesktop = desktopCount[Math.round(desktopCount.length / 2)] / 2;
+
+      if (!isNaN(minDesktop)) {
+        stability.desktop = stability.desktop.filter(
+          (item) => item.grades.length >= minDesktop,
+        );
+      }
+    }
+
     return {
       totalPulses,
       averagePerformance,
