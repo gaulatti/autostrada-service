@@ -235,8 +235,113 @@ const getTimeOfDayPerformance = (pulses: Pulse[]) => {
   return { mobile, desktop };
 };
 
+const categories = [
+  'performance',
+  'accessibility',
+  'best_practices',
+  'seo',
+
+  /**
+   * We're not collecting these metrics. Yet.
+   */
+  // 'security',
+  // 'aesthetics',
+];
+
+/**
+ * Computes the grades distribution for mobile and desktop platforms based on the provided pulses.
+ *
+ * @param pulses - An array of `Pulse` objects, where each pulse contains heartbeats with grades and platform information.
+ * @returns An object containing the grades distribution for both mobile and desktop platforms.
+ *          The result is formatted as:
+ *          {
+ *            desktop: Array<{ metric: string, value: number }>,
+ *            mobile: Array<{ metric: string, value: number }>
+ *          }
+ *          Each entry in the `desktop` and `mobile` arrays represents a category (metric) and its average grade value.
+ *
+ * @remarks
+ * - Grades are grouped by platform type (`mobile` or `desktop`) and category.
+ * - The average grade for each category is calculated and rounded to the nearest integer.
+ * - If no grades are available for a category, the average is set to `0`.
+ */
+const getGradesDistribution = (pulses: Pulse[]) => {
+  const heartbeats = pulses.flatMap((pulse) => pulse.heartbeats);
+
+  /**
+   * Collect metrics p/category for mobile.
+   */
+  const mobile = heartbeats
+    .filter((heartbeat) => heartbeat.platform?.type === 'mobile')
+    .map((heartbeat) => heartbeat.grades)
+    .reduce(
+      (prev, current) => {
+        for (const category of categories) {
+          if (!prev[category]) {
+            prev[category] = [];
+          }
+          prev[category].push(current[category]);
+        }
+        return prev;
+      },
+      {} as Record<string, number[]>,
+    );
+
+  /**
+   * Collect metrics p/category for desktop.
+   */
+  const desktop = heartbeats
+    .filter((heartbeat) => heartbeat.platform?.type === 'desktop')
+    .map((heartbeat) => heartbeat.grades)
+    .reduce(
+      (prev, current) => {
+        for (const category of categories) {
+          if (!prev[category]) {
+            prev[category] = [];
+          }
+          prev[category].push(current[category]);
+        }
+        return prev;
+      },
+      {} as Record<string, number[]>,
+    );
+
+  /**
+   * Calculate their averages
+   */
+  const mobileAverages: Record<string, number> = {};
+  const desktopAverages: Record<string, number> = {};
+  categories.forEach((category) => {
+    mobileAverages[category] = Math.round(
+      (mobile[category] || []).reduce((a, b) => a + b, 0) /
+        (mobile[category].length || 1),
+    );
+    desktopAverages[category] = Math.round(
+      (desktop[category] || []).reduce((a, b) => a + b, 0) /
+        (desktop[category].length || 1),
+    );
+  });
+
+  /**
+   * Final Formatting
+   */
+  const gradesData = {
+    desktop: categories.map((category) => ({
+      metric: category,
+      value: desktopAverages[category] || 0,
+    })),
+    mobile: categories.map((category) => ({
+      metric: category,
+      value: mobileAverages[category] || 0,
+    })),
+  };
+
+  return gradesData;
+};
+
 export {
   getAveragePerformance,
+  getGradesDistribution,
   getGradeStability,
   getPlatformDifferences,
   getTimeOfDayPerformance,

@@ -13,6 +13,7 @@ import { DeliverRequest } from 'src/types/client';
 import { nanoid } from 'src/utils/nanoid';
 import {
   getAveragePerformance,
+  getGradesDistribution,
   getGradeStability,
   getPlatformDifferences,
   getTimeOfDayPerformance,
@@ -156,6 +157,7 @@ export class PulsesService {
         differences: getPlatformDifferences(stability).slice(0, 3),
       },
       timeOfDay: getTimeOfDayPerformance(pulses),
+      grades: getGradesDistribution(pulses),
     };
   }
 
