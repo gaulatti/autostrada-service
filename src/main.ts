@@ -9,6 +9,7 @@ import { join } from 'path';
 import { AppModule } from './app.module';
 import { AuthorizationGuard } from './authorization/authorization.guard';
 import { grpcPort, httpPort } from './utils/network';
+import compression from '@fastify/compress';
 
 /**
  * Initializes and starts the NestJS application with Fastify adapter.
@@ -38,6 +39,11 @@ async function bootstrap(): Promise<void> {
    * Register the global authorization guard
    */
   app.useGlobalGuards(new AuthorizationGuard(app.get(Reflector)));
+
+  /**
+   * Use Compression
+   */
+  await app.register(compression);
 
   /**
    * Start the gRPC server
