@@ -1,5 +1,6 @@
 import { CreationOptional } from 'sequelize';
 import {
+  BelongsToMany,
   Column,
   CreatedAt,
   DataType,
@@ -8,6 +9,7 @@ import {
   Table,
   UpdatedAt,
 } from 'sequelize-typescript';
+import { Cluster } from './cluster.model';
 import { Junction } from './junction.model';
 import { Pulse } from './pulse.model';
 
@@ -42,6 +44,9 @@ export class Url extends Model<Url, CreationOptional<Url>> {
 
   @HasMany(() => Junction)
   junctions!: Junction[];
+
+  @BelongsToMany(() => Cluster, () => Junction)
+  clusters!: Cluster[];
 
   @CreatedAt
   @Column({ field: 'created_at', type: DataType.DATE })

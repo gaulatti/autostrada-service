@@ -1,9 +1,12 @@
+import { Cluster } from 'src/models/cluster.model';
 import { Heartbeat } from 'src/models/heartbeat.model';
 import { Pulse } from 'src/models/pulse.model';
 
 export interface StabilityData {
-  url: string;
+  url?: string;
+  cluster?: string;
   slug: string;
+  name?: string;
   variation: number;
   average: number;
   grades: number[];
@@ -15,7 +18,9 @@ export interface StabilityObject {
 }
 
 export interface PlatformDifference {
-  url: string;
+  url?: string;
+  name?: string;
+  cluster?: string;
   slug: string;
   desktopAverage: number;
   mobileAverage: number;
@@ -137,6 +142,87 @@ const getGradeStability = (
 };
 
 /**
+ * Computes the stability data for a set of clusters based on their performance grades.
+ *
+ * @param clusters - An array of clusters, each containing metadata such as name, slug, and URLs.
+ * @param type - The platform type to filter heartbeats by, either 'desktop' or 'mobile'.
+ * @returns An array of stability data objects, each containing the cluster's name, slug,
+ *          variation in performance grades, average performance grade, and the list of grades.
+ *
+ * The function performs the following steps:
+ * 1. Collects metadata from the provided clusters, including performance grades from heartbeats
+ *    filtered by the specified platform type.
+ * 2. Calculates the variation (difference between the maximum and minimum grades) and the average
+ *    performance grade for each cluster.
+ * 3. Returns an array of stability data objects containing the computed metrics and associated metadata.
+ *
+ * StabilityData includes:
+ * - `name`: The name of the cluster.
+ * - `slug`: The unique identifier for the cluster.
+ * - `variation`: The difference between the highest and lowest performance grades.
+ * - `average`: The average of all performance grades, rounded to the nearest integer.
+ * - `grades`: The list of performance grades for the cluster.
+ */
+const getClusterStability = (
+  clusters: Cluster[],
+  type: 'desktop' | 'mobile',
+): StabilityData[] => {
+  const gradesMap: Record<string, number[]> = {};
+  const namesMap: Record<string, string> = {};
+
+  /**
+   * Collect metadata from pulse, heartbeats and url
+   */
+  clusters.forEach(({ name, slug, urls }) => {
+    if (!namesMap[slug]) {
+      namesMap[slug] = name;
+    }
+    if (!gradesMap[slug]) {
+      gradesMap[slug] = [];
+    }
+
+    urls
+      .flatMap((url) => url.pulses)
+      .flatMap((pulse) => pulse.heartbeats)
+      .filter((heartbeat) => heartbeat.platform?.type == type)
+      .sort((a, b) => a.updatedAt.getTime() - b.updatedAt.getTime())
+      .forEach((heartbeat) => {
+        const performance = heartbeat.grades.performance;
+        gradesMap[slug].push(performance);
+      });
+  });
+
+  /**
+   * Calculate variations and other datapoints
+   */
+  const variations: StabilityData[] = Object.entries(gradesMap)
+    .map(([slug, grades]) => {
+      const name = namesMap[slug] || '';
+
+      /**
+       * Calculate Variation
+       */
+      const variation = !grades.length
+        ? Infinity
+        : Math.max(...grades) - Math.min(...grades);
+
+      /**
+       * Calculate Average
+       */
+      const average = !grades.length
+        ? 0
+        : Math.round(
+            grades.reduce((prev, current) => prev + current, 0) / grades.length,
+          );
+
+      return { name, slug, variation, average, grades };
+    })
+    .filter((item) => item.grades.length);
+
+  return variations;
+};
+
+/**
  * Compares the stability data between desktop and mobile platforms and identifies the differences.
  *
  * @param stability - An object containing stability data for both desktop and mobile platforms.
@@ -157,20 +243,23 @@ const getPlatformDifferences = (
   const mobileMap = new Map<string, StabilityData>();
 
   stability.desktop.forEach((item) => {
-    desktopMap.set(item.url, item);
+    const key = item.url || item.slug;
+    desktopMap.set(key, item);
   });
   stability.mobile.forEach((item) => {
-    mobileMap.set(item.url, item);
+    const key = item.url || item.slug;
+    mobileMap.set(key, item);
   });
 
   const differences: PlatformDifference[] = [];
 
-  desktopMap.forEach((desktopItem, url) => {
-    if (mobileMap.has(url)) {
-      const mobileItem = mobileMap.get(url)!;
+  desktopMap.forEach((desktopItem, key) => {
+    if (mobileMap.has(key)) {
+      const mobileItem = mobileMap.get(key)!;
       const diff = Math.abs(desktopItem.average - mobileItem.average);
       differences.push({
-        url,
+        url: desktopItem.url,
+        name: desktopItem.name,
         slug: desktopItem.slug,
         desktopAverage: desktopItem.average,
         mobileAverage: mobileItem.average,
@@ -423,6 +512,7 @@ const minDatapointsFilter = (stability: StabilityObject) => {
 
 export {
   getAveragePerformance,
+  getClusterStability,
   getGradesDistribution,
   getGradeStability,
   getHistory,
