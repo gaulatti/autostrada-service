@@ -15,6 +15,7 @@ export class ClustersController {
   private readonly logger!: JSONLogger;
 
   @Get()
+  @Public()
   list(
     @Query('page', ParseIntPipe) page: number,
     @Query('pageSize', ParseIntPipe) pageSize: number,
