@@ -85,9 +85,9 @@ export class UrlsService {
 
     return {
       stability: {
-        mobile: stability.mobile.slice(0, 10),
-        desktop: stability.desktop.slice(0, 10),
-        differences: getPlatformDifferences(stability).slice(0, 10),
+        mobile: stability.mobile.slice(0, 3),
+        desktop: stability.desktop.slice(0, 3),
+        differences: getPlatformDifferences(stability).slice(0, 3),
       },
     };
   }
