@@ -38,6 +38,16 @@ export class ClustersService {
   }
 
   /**
+   * Retrieves a Cluster record based on the provided slug.
+   *
+   * @param slug - The unique identifier for the Cluster to retrieve.
+   * @returns A promise that resolves to the Cluster record if found, or `null` if no record matches the slug.
+   */
+  async get(slug: string) {
+    return this.clusterModel.findOne({ where: { slug }, include: [Url] });
+  }
+
+  /**
    * Retrieves statistical data for clusters within a specified date range.
    *
    * This method fetches clusters along with their associated URLs, pulses, heartbeats,
