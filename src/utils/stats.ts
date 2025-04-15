@@ -399,11 +399,11 @@ const getGradesDistribution = (heartbeats: Heartbeat[]) => {
   categories.forEach((category) => {
     mobileAverages[category] = Math.round(
       (mobile[category] || []).reduce((a, b) => a + b, 0) /
-        (mobile[category].length || 1),
+        (mobile[category]?.length || 1),
     );
     desktopAverages[category] = Math.round(
       (desktop[category] || []).reduce((a, b) => a + b, 0) /
-        (desktop[category].length || 1),
+        (desktop[category]?.length || 1),
     );
   });
 
