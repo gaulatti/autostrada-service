@@ -427,11 +427,12 @@ const getGradesDistribution = (heartbeats: Heartbeat[]) => {
 /**
  * Transforms a `Heartbeat` object containing Core Web Vitals (CWV) data into a history object.
  *
- * @param {Heartbeat} param0 - An object containing the `cwv` property with Core Web Vitals data.
+ * @param {Heartbeat} heartbeat - A Heartbeat object containing the `cwv` property with Core Web Vitals data.
  * @returns {Object} A history object containing the following properties:
  * - `date` (Date): The last updated timestamp of the CWV data.
  * - `ttfb` (number): Time to First Byte.
  * - `fcp` (number): First Contentful Paint.
+ * - `fid` (number): First Input Delay.
  * - `dcl` (number): DOM Content Loaded.
  * - `lcp` (number): Largest Contentful Paint.
  * - `tti` (number): Time to Interactive.
@@ -439,17 +440,28 @@ const getGradesDistribution = (heartbeats: Heartbeat[]) => {
  * - `cls` (number): Cumulative Layout Shift.
  * - `tbt` (number): Total Blocking Time.
  */
-const cwvToHistory = ({ cwv }: Heartbeat) => {
+const cwvToHistory = (heartbeat: Heartbeat) => {
+  if (!heartbeat || !heartbeat.cwv) {
+    return null;
+  }
+
+  const { cwv, updatedAt } = heartbeat;
+
+  const year = updatedAt.getFullYear();
+  const month = (updatedAt.getMonth() + 1).toString().padStart(2, '0');
+  const day = updatedAt.getDate().toString().padStart(2, '0');
+  const formattedDate = `${year}-${month}-${day}`;
+
   return {
-    date: cwv.updatedAt,
-    ttfb: cwv.ttfb,
-    fcp: cwv.fcp,
-    dcl: cwv.dcl,
-    lcp: cwv.lcp,
-    tti: cwv.tti,
-    si: cwv.si,
-    cls: cwv.cls,
-    tbt: cwv.tbt,
+    date: formattedDate,
+    ttfb: cwv.ttfb || 0,
+    fcp: cwv.fcp || 0,
+    dcl: cwv.dcl || 0,
+    lcp: cwv.lcp || 0,
+    tti: cwv.tti || 0,
+    si: cwv.si || 0,
+    cls: parseFloat(cwv.cls || '0').toFixed(3),
+    tbt: cwv.tbt || 0,
   };
 };
 

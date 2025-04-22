@@ -1,8 +1,14 @@
-import { Controller, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
-import { GrpcMethod } from '@nestjs/microservices';
+import {
+  Body,
+  Controller,
+  Get,
+  Param,
+  ParseIntPipe,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { Logger } from 'src/decorators/logger.decorator';
 import { Public } from 'src/decorators/public.decorator';
-import { DeliverRequest, DeliverResponse } from 'src/types/client';
 import { JSONLogger } from 'src/utils/logger';
 import { PulsesService } from './pulses.service';
 
@@ -81,14 +87,17 @@ export class PulsesController {
   }
 
   /**
-   * Handles the gRPC method 'Deliver' for the 'ClientService'.
+   * Handles the delivery of data to the pulses service.
    *
-   * @param data - The request data for the deliver operation.
-   * @returns A promise that resolves to a DeliverResponse indicating the success of the operation.
+   * @param data - The payload to be delivered to the pulses service.
+   *               This should contain the necessary information
+   *               required for processing the delivery.
+   *
+   * @returns void
    */
-  @GrpcMethod('ClientService', 'Deliver')
-  deliver(data: DeliverRequest): DeliverResponse {
+  @Post()
+  @Public()
+  deliver(@Body() data) {
     void this.pulsesService.deliver(data);
-    return { success: true };
   }
 }

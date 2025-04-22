@@ -67,7 +67,7 @@ export class HeartbeatsService {
    * - The heartbeat is created first as it serves as a foreign key for the associated metrics.
    * - Metrics creation is delegated to the gradesService and cwvService.
    */
-  async create(pulse: Pulse, data: { slug: string; simplifiedFile: any }) {
+  async create(pulse: Pulse, data: any) {
     /**
      * Retrieves the platform information associated with the specified user agent string.
      *
@@ -75,13 +75,11 @@ export class HeartbeatsService {
      * @param platform - The platform context to use for the lookup.
      * @returns A promise that resolves to the platform information corresponding to the user agent.
      */
-    const platform = await this.platformsService.getByUserAgent(
-      data.simplifiedFile.userAgent,
-    );
+    const platform = await this.platformsService.getByUserAgent(data.userAgent);
 
     /**
      * Provider.
-     * TODO: This should not be hardcoded. It should be determined by the wiphala strategy
+     * TODO: This should not be hardcoded. It should be determined by the n8n strategy
      * or the provider itself used. Brainstorming pending.
      *
      * By now, using a placeholder.
@@ -103,7 +101,7 @@ export class HeartbeatsService {
     /**
      * Create the child metrics.
      */
-    void this.gradesService.create(heartbeat, data.simplifiedFile);
-    void this.cwvService.create(heartbeat, data.simplifiedFile);
+    void this.gradesService.create(heartbeat, data);
+    void this.cwvService.create(heartbeat, data);
   }
 }

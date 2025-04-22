@@ -9,7 +9,6 @@ import { Provider } from 'src/models/provider.model';
 import { Pulse } from 'src/models/pulse.model';
 import { Url } from 'src/models/url.model';
 import { UrlsService } from 'src/targets/urls/urls.service';
-import { DeliverRequest } from 'src/types/client';
 import { nanoid } from 'src/utils/nanoid';
 import {
   getAveragePerformance,
@@ -184,15 +183,8 @@ export class PulsesService {
    *
    * @throws Will throw an error if the payload is invalid or if required data is missing.
    */
-  async deliver(data: DeliverRequest) {
-    const {
-      dataValues: { slug },
-      context: {
-        metadata: { url },
-        sequence,
-      },
-    } = JSON.parse(data.payload);
-
+  async deliver(data) {
+    const { url, slug, mobile, desktop } = data;
     /**
      * URL
      */
@@ -208,17 +200,16 @@ export class PulsesService {
     });
 
     /**
+     * TODO: Support multiple outputs, not just "mobile | desktop".
+     * Keeping it this way to shutdown wiphala and migrate to n8n.
+     */
+    const output = [mobile, desktop];
+
+    /**
      * Create heartbeats with metrics.
      */
 
-    const slot = sequence.find(
-      (item: { name: string }) => item.name === 'AutostradaProcess',
-    );
-    if (slot) {
-      slot.output.forEach(
-        (item) => void this.heartbeatsService.create(pulse, item),
-      );
-    }
+    output.forEach((item) => void this.heartbeatsService.create(pulse, item));
   }
 
   async findBySlug(slug: string) {
