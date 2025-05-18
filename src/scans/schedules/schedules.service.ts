@@ -40,7 +40,7 @@ export class SchedulesService {
    */
   counter = 0;
 
-  @Cron(`* * * * *`)
+  @Cron(`*/30 * * * *`)
   testSchedule() {
     void axios.post(
       process.env.N8N_WEBHOOK!,
