@@ -201,7 +201,6 @@ export class PulsesService {
 
     /**
      * TODO: Support multiple outputs, not just "mobile | desktop".
-     * Keeping it this way to shutdown wiphala and migrate to n8n.
      */
     const output = [mobile, desktop];
 
