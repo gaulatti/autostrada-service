@@ -1,5 +1,7 @@
 # Autostrada Backend Service
 
+[![codecov](https://codecov.io/gh/gaulatti/autostrada-service/graph/badge.svg?token=LbN4ANwMAK)](https://codecov.io/gh/gaulatti/autostrada-service)
+
 A robust **NestJS** backend service powering the Autostrada web performance monitoring platform. Built with TypeScript, this service provides secure API endpoints for tracking, analyzing, and reporting website performance metrics collected via Google PageSpeed Insights and Lighthouse reports.
 
 ## Description

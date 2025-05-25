@@ -1,15 +1,13 @@
+import compression from '@fastify/compress';
 import { Logger } from '@nestjs/common';
 import { NestFactory, Reflector } from '@nestjs/core';
-import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 import {
   FastifyAdapter,
   NestFastifyApplication,
 } from '@nestjs/platform-fastify';
-import { join } from 'path';
 import { AppModule } from './app.module';
 import { AuthorizationGuard } from './authorization/authorization.guard';
-import { grpcPort, httpPort } from './utils/network';
-import compression from '@fastify/compress';
+import { httpPort } from './utils/network';
 
 /**
  * Initializes and starts the NestJS application with Fastify adapter.
