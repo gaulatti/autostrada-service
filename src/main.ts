@@ -46,20 +46,6 @@ async function bootstrap(): Promise<void> {
   await app.register(compression);
 
   /**
-   * Start the gRPC server
-   */
-  app.connectMicroservice<MicroserviceOptions>({
-    transport: Transport.GRPC,
-    options: {
-      package: 'client',
-      protoPath: join(__dirname, './proto/client.proto'),
-      url: `0.0.0.0:${grpcPort}`,
-    },
-  });
-  await app.startAllMicroservices();
-  Logger.log(`🚀 gRPC server running on port ${grpcPort}`);
-
-  /**
    * Start the application.
    */
   await app.listen(httpPort, '0.0.0.0');
