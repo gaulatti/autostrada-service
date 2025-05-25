@@ -11,7 +11,6 @@ import {
 } from 'sequelize-typescript';
 import { Cluster } from './cluster.model';
 import { Junction } from './junction.model';
-import { Pulse } from './pulse.model';
 
 @Table({
   tableName: 'urls',
@@ -38,9 +37,6 @@ export class Url extends Model<Url, CreationOptional<Url>> {
     unique: true,
   })
   slug!: string;
-
-  @HasMany(() => Pulse)
-  pulses!: Pulse[];
 
   @HasMany(() => Junction)
   junctions!: Junction[];

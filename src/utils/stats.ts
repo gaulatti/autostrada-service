@@ -1,6 +1,4 @@
-import { Cluster } from 'src/models/cluster.model';
-import { Heartbeat } from 'src/models/heartbeat.model';
-import { Pulse } from 'src/models/pulse.model';
+import { Performance } from 'src/models/performance.model';
 
 export interface StabilityData {
   url?: string;
@@ -28,39 +26,58 @@ export interface PlatformDifference {
   desktopVariation: number;
   mobileVariation: number;
 }
+
 /**
- * Calculates the average performance score from a collection of pulses.
+ * Calculates the average performance score from a collection of performance records.
  *
- * @param pulses - An array of `Pulse` objects, each containing heartbeats and their associated grades.
- * @returns The average performance score rounded to the nearest integer. Returns 0 if the input array is empty.
+ * @param performances - An array of `Performance` objects with Core Web Vitals metrics.
+ * @returns The average performance score calculated from the metrics. Returns 0 if the input array is empty.
  */
-const getAveragePerformance = (pulses: Pulse[]) => {
-  if (!pulses.length) {
+const getAveragePerformance = (performances: Performance[]) => {
+  if (!performances.length) {
     return 0;
   }
 
-  const grades = pulses
-    .flatMap((pulse) => pulse.heartbeats)
-    .flatMap((heartbeat) => heartbeat.grades)
-    .flatMap(({ performance }) => [performance]);
+  // Calculate performance score from Core Web Vitals metrics
+  const performanceScores = performances
+    .map((performance) => {
+      // Simple scoring based on Core Web Vitals - this can be enhanced
+      const lcpScore = performance.lcp
+        ? Math.max(0, 100 - performance.lcp / 25)
+        : 0;
+      const fcpScore = performance.fcp
+        ? Math.max(0, 100 - performance.fcp / 18)
+        : 0;
+      const clsScore = performance.cls
+        ? Math.max(0, 100 - parseFloat(performance.cls) * 100)
+        : 0;
+
+      return Math.round((lcpScore + fcpScore + clsScore) / 3);
+    })
+    .filter((score) => score !== null && score !== undefined);
+
+  if (!performanceScores.length) {
+    return 0;
+  }
 
   return Math.round(
-    grades.reduce((prev, current) => prev + current, 0) / grades.length,
+    performanceScores.reduce((prev, current) => prev + current, 0) /
+      performanceScores.length,
   );
 };
 
 /**
- * Retrieves the count of unique URLs monitored from a list of pulses.
+ * Retrieves the count of unique URLs monitored from a list of performance records.
  *
- * @param pulses - An array of `Pulse` objects containing URL information.
- * @returns The number of unique URLs found in the provided pulses.
+ * @param performances - An array of `Performance` objects containing URL information.
+ * @returns The number of unique URLs found in the provided performance records.
  */
-const getUrlsMonitored = (pulses: Pulse[]) => {
-  const urls: Set<string> = new Set();
+const getUrlsMonitored = (performances: Performance[]) => {
+  const urls: Set<number> = new Set();
 
-  for (const pulse of pulses) {
-    if (!urls.has(pulse.url!.url)) {
-      urls.add(pulse.url!.url);
+  for (const performance of performances) {
+    if (!urls.has(performance.url_id)) {
+      urls.add(performance.url_id);
     }
   }
 
@@ -68,73 +85,68 @@ const getUrlsMonitored = (pulses: Pulse[]) => {
 };
 
 /**
- * Computes the stability data for a set of pulses based on their performance grades.
+ * Computes the stability data for performance records based on their calculated performance scores.
  *
- * @param pulses - An array of `Pulse` objects containing URL and heartbeat data.
- * @param type - The platform type to filter heartbeats by, either 'desktop' or 'mobile'.
+ * @param performances - An array of `Performance` objects with Core Web Vitals metrics.
+ * @param type - The platform type to filter performance records by, either 'desktop' or 'mobile'.
  * @returns An array of `StabilityData` objects, each containing the URL, slug, variation,
- *          average performance grade, and the list of grades for that URL.
- *
- * The function performs the following steps:
- * 1. Collects metadata from the provided pulses, including URLs, slugs, and performance grades
- *    filtered by the specified platform type.
- * 2. Calculates the variation (difference between the maximum and minimum grades) and the average
- *    performance grade for each URL.
- * 3. Returns the computed stability data for each URL.
+ *          average performance score, and the list of scores for that URL.
  */
 const getGradeStability = (
-  pulses: Pulse[],
+  performances: Performance[],
   type: 'desktop' | 'mobile',
 ): StabilityData[] => {
-  const urlGradesMap: Record<string, number[]> = {};
-  const urlSlugsMap: Record<string, string> = {};
+  const urlGradesMap: Record<number, number[]> = {};
+  const urlSlugsMap: Record<number, string> = {};
 
-  /**
-   * Collect metadata from pulse, heartbeats and url
-   */
-  pulses.forEach((pulse) => {
-    const url = pulse.url!.url;
+  // Filter performance records by platform type and collect performance data
+  const filteredPerformances = performances.filter(
+    (performance) => performance.platform?.type === type,
+  );
 
-    if (!urlSlugsMap[url]) {
-      urlSlugsMap[url] = pulse.url!.slug;
+  filteredPerformances.forEach((performance) => {
+    const urlId = performance.url_id;
+
+    if (!urlSlugsMap[urlId] && performance.url) {
+      urlSlugsMap[urlId] = performance.url.slug;
     }
 
-    if (!urlGradesMap[url]) {
-      urlGradesMap[url] = [];
+    if (!urlGradesMap[urlId]) {
+      urlGradesMap[urlId] = [];
     }
 
-    pulse.heartbeats
-      .filter((heartbeat) => heartbeat.platform?.type == type)
-      .forEach((heartbeat) => {
-        const performance = heartbeat.grades.performance;
-        urlGradesMap[url].push(performance);
-      });
+    // Calculate performance score from Core Web Vitals metrics
+    const lcpScore = performance.lcp
+      ? Math.max(0, 100 - performance.lcp / 25)
+      : 0;
+    const fcpScore = performance.fcp
+      ? Math.max(0, 100 - performance.fcp / 18)
+      : 0;
+    const clsScore = performance.cls
+      ? Math.max(0, 100 - parseFloat(performance.cls) * 100)
+      : 0;
+    const performanceScore = Math.round((lcpScore + fcpScore + clsScore) / 3);
+    urlGradesMap[urlId].push(performanceScore);
   });
 
-  /**
-   * Calculate variations and other datapoints
-   */
+  // Calculate variations and other datapoints
   const urlVariations: StabilityData[] = Object.entries(urlGradesMap).map(
-    ([url, grades]) => {
-      const slug = urlSlugsMap[url] || '';
+    ([urlId, grades]) => {
+      const slug = urlSlugsMap[parseInt(urlId)] || '';
 
-      /**
-       * Calculate Variation
-       */
+      // Calculate Variation
       const variation = !grades.length
         ? Infinity
         : Math.max(...grades) - Math.min(...grades);
 
-      /**
-       * Calculate Average
-       */
+      // Calculate Average
       const average = !grades.length
         ? 0
         : Math.round(
             grades.reduce((prev, current) => prev + current, 0) / grades.length,
           );
 
-      return { url, slug, variation, average, grades };
+      return { url: undefined, slug, variation, average, grades };
     },
   );
 
@@ -144,82 +156,59 @@ const getGradeStability = (
 /**
  * Computes the stability data for a set of clusters based on their performance grades.
  *
- * @param clusters - An array of clusters, each containing metadata such as name, slug, and URLs.
- * @param type - The platform type to filter heartbeats by, either 'desktop' or 'mobile'.
- * @returns An array of stability data objects, each containing the cluster's name, slug,
- *          variation in performance grades, average performance grade, and the list of grades.
+ * @param performances - An array of Performance objects with an optional cluster property.
+ * @returns An array of StabilityData objects, each containing the cluster, variation, average, and grades for that cluster.
  *
- * The function performs the following steps:
- * 1. Collects metadata from the provided clusters, including performance grades from heartbeats
- *    filtered by the specified platform type.
- * 2. Calculates the variation (difference between the maximum and minimum grades) and the average
- *    performance grade for each cluster.
- * 3. Returns an array of stability data objects containing the computed metrics and associated metadata.
- *
- * StabilityData includes:
- * - `name`: The name of the cluster.
- * - `slug`: The unique identifier for the cluster.
- * - `variation`: The difference between the highest and lowest performance grades.
- * - `average`: The average of all performance grades, rounded to the nearest integer.
- * - `grades`: The list of performance grades for the cluster.
+ * Note: This implementation assumes that each Performance may have a 'cluster' property or association.
+ * If not, this function will return an empty array. Update this logic if/when clusters are reintroduced.
  */
-const getClusterStability = (
-  clusters: Cluster[],
-  type: 'desktop' | 'mobile',
-): StabilityData[] => {
-  const gradesMap: Record<string, number[]> = {};
-  const namesMap: Record<string, string> = {};
-
-  /**
-   * Collect metadata from pulse, heartbeats and url
-   */
-  clusters.forEach(({ name, slug, urls }) => {
-    if (!namesMap[slug]) {
-      namesMap[slug] = name;
+const getClusterStability = (performances: Performance[]): StabilityData[] => {
+  // If clusters are not present on Performance, return empty array
+  if (!performances.length || !('cluster' in performances[0])) {
+    return [];
+  }
+  // Group by cluster
+  const clusterGradesMap: Record<string, number[]> = {};
+  const clusterNamesMap: Record<string, string> = {};
+  performances.forEach((performance: any) => {
+    if (!performance.cluster) return;
+    const clusterKey = performance.cluster.slug || performance.cluster;
+    if (!clusterGradesMap[clusterKey]) {
+      clusterGradesMap[clusterKey] = [];
+      clusterNamesMap[clusterKey] = performance.cluster.name || '';
     }
-    if (!gradesMap[slug]) {
-      gradesMap[slug] = [];
-    }
-
-    urls
-      .flatMap((url) => url.pulses)
-      .flatMap((pulse) => pulse.heartbeats)
-      .filter((heartbeat) => heartbeat.platform?.type == type)
-      .sort((a, b) => a.updatedAt.getTime() - b.updatedAt.getTime())
-      .forEach((heartbeat) => {
-        const performance = heartbeat.grades.performance;
-        gradesMap[slug].push(performance);
-      });
+    // Calculate performance score from Core Web Vitals metrics
+    const lcpScore = performance.lcp
+      ? Math.max(0, 100 - performance.lcp / 25)
+      : 0;
+    const fcpScore = performance.fcp
+      ? Math.max(0, 100 - performance.fcp / 18)
+      : 0;
+    const clsScore = performance.cls
+      ? Math.max(0, 100 - parseFloat(performance.cls) * 100)
+      : 0;
+    const performanceScore = Math.round((lcpScore + fcpScore + clsScore) / 3);
+    clusterGradesMap[clusterKey].push(performanceScore);
   });
-
-  /**
-   * Calculate variations and other datapoints
-   */
-  const variations: StabilityData[] = Object.entries(gradesMap)
-    .map(([slug, grades]) => {
-      const name = namesMap[slug] || '';
-
-      /**
-       * Calculate Variation
-       */
-      const variation = !grades.length
-        ? Infinity
-        : Math.max(...grades) - Math.min(...grades);
-
-      /**
-       * Calculate Average
-       */
-      const average = !grades.length
-        ? 0
-        : Math.round(
-            grades.reduce((prev, current) => prev + current, 0) / grades.length,
-          );
-
-      return { name, slug, variation, average, grades };
-    })
-    .filter((item) => item.grades.length);
-
-  return variations;
+  // Calculate variations and other datapoints
+  return Object.entries(clusterGradesMap).map(([cluster, grades]) => {
+    const variation = !grades.length
+      ? Infinity
+      : Math.max(...grades) - Math.min(...grades);
+    const average = !grades.length
+      ? 0
+      : Math.round(
+          grades.reduce((prev, current) => prev + current, 0) / grades.length,
+        );
+    return {
+      cluster,
+      name: clusterNamesMap[cluster],
+      slug: cluster,
+      variation,
+      average,
+      grades,
+    };
+  });
 };
 
 /**
@@ -228,13 +217,6 @@ const getClusterStability = (
  * @param stability - An object containing stability data for both desktop and mobile platforms.
  * @returns An array of `PlatformDifference` objects, each representing the difference in stability metrics
  *          for a specific URL between desktop and mobile platforms, sorted by the difference in ascending order.
- *
- * The function performs the following steps:
- * - Maps the stability data for desktop and mobile platforms by URL.
- * - Iterates through the desktop data and checks for matching URLs in the mobile data.
- * - Calculates the absolute difference in the average stability metric for each matching URL.
- * - Constructs a `PlatformDifference` object for each matching URL, including additional stability metrics.
- * - Sorts the resulting differences by the calculated difference in ascending order.
  */
 const getPlatformDifferences = (
   stability: StabilityObject,
@@ -246,6 +228,7 @@ const getPlatformDifferences = (
     const key = item.url || item.slug;
     desktopMap.set(key, item);
   });
+
   stability.mobile.forEach((item) => {
     const key = item.url || item.slug;
     mobileMap.set(key, item);
@@ -275,212 +258,180 @@ const getPlatformDifferences = (
 };
 
 /**
- * Extracts and formats time-related information from a Heartbeat object.
+ * Extracts and formats time-related information from a Performance object.
  *
- * @param item - The Heartbeat object containing the `updatedAt` timestamp and `grades.performance` data.
- * @returns An object containing:
- *   - `date`: The formatted date string in the format `YYYY-MM-DD`.
- *   - `hour`: The formatted time string in the format `HH:mm`.
- *   - `timeDecimal`: The time represented as a decimal value (hours + minutes/60).
- *   - `performance`: The performance grade from the Heartbeat object.
+ * @param item - The Performance object containing the `created_at` timestamp and performance data.
+ * @returns An object containing date, hour, timeDecimal, and performance information.
  */
-const extractTimeOfDay = (item: Heartbeat) => {
-  const hours = item.updatedAt.getHours();
-  const minutes = item.updatedAt.getMinutes();
+const extractTimeOfDay = (item: Performance) => {
+  const recordedAt = item.createdAt;
+  const hours = recordedAt.getHours();
+  const minutes = recordedAt.getMinutes();
   const timeDecimal = hours + minutes / 60;
 
-  const year = item.updatedAt.getFullYear();
-  const month = (item.updatedAt.getMonth() + 1).toString().padStart(2, '0');
-  const day = item.updatedAt.getDate().toString().padStart(2, '0');
+  const year = recordedAt.getFullYear();
+  const month = (recordedAt.getMonth() + 1).toString().padStart(2, '0');
+  const day = recordedAt.getDate().toString().padStart(2, '0');
   const date = `${year}-${month}-${day}`;
+
+  // Calculate performance score from Core Web Vitals metrics
+  const lcpScore = item.lcp ? Math.max(0, 100 - item.lcp / 25) : 0;
+  const fcpScore = item.fcp ? Math.max(0, 100 - item.fcp / 18) : 0;
+  const clsScore = item.cls ? Math.max(0, 100 - parseFloat(item.cls) * 100) : 0;
+  const performance = Math.round((lcpScore + fcpScore + clsScore) / 3);
+
   return {
-    slug: item.slug,
+    slug: `performance-${item.id}`,
     date,
     hour: `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`,
     timeDecimal,
-    performance: item.grades.performance,
+    performance,
   };
 };
 
 /**
- * Analyzes the performance of heartbeats based on the time of day, categorized by platform type.
+ * Analyzes the performance of performance records based on the time of day, categorized by platform type.
  *
- * @param pulses - An array of `Pulse` objects, each containing heartbeats and their associated data.
+ * @param performances - An array of `Performance` objects.
  * @returns An object containing two arrays:
- *          - `mobile`: Time of day data extracted from heartbeats on mobile platforms.
- *          - `desktop`: Time of day data extracted from heartbeats on desktop platforms.
+ *          - `mobile`: Time of day data extracted from performance records on mobile platforms.
+ *          - `desktop`: Time of day data extracted from performance records on desktop platforms.
  */
-const getTimeOfDayPerformance = (heartbeats: Heartbeat[]) => {
-  const mobile = heartbeats
-    .filter((heartbeat) => heartbeat.platform?.type == 'mobile')
+const getTimeOfDayPerformance = (performances: Performance[]) => {
+  const mobile = performances
+    .filter((performance) => performance.platform?.type === 'mobile')
     .map(extractTimeOfDay);
 
-  const desktop = heartbeats
-    .filter((heartbeat) => heartbeat.platform?.type == 'desktop')
+  const desktop = performances
+    .filter((performance) => performance.platform?.type === 'desktop')
     .map(extractTimeOfDay);
 
   return { mobile, desktop };
 };
 
-const categories = [
-  'performance',
-  'accessibility',
-  'best_practices',
-  'seo',
-
-  /**
-   * We're not collecting these metrics. Yet.
-   */
-  // 'security',
-  // 'aesthetics',
-];
-
 /**
- * Computes the grades distribution for mobile and desktop platforms based on the provided pulses.
+ * Computes the performance distribution for mobile and desktop platforms based on the provided performance records.
+ * Note: This function now calculates performance from Core Web Vitals metrics instead of pre-calculated grades.
  *
- * @param pulses - An array of `Pulse` objects, where each pulse contains heartbeats with grades and platform information.
- * @returns An object containing the grades distribution for both mobile and desktop platforms.
- *          The result is formatted as:
- *          {
- *            desktop: Array<{ metric: string, value: number }>,
- *            mobile: Array<{ metric: string, value: number }>
- *          }
- *          Each entry in the `desktop` and `mobile` arrays represents a category (metric) and its average grade value.
- *
- * @remarks
- * - Grades are grouped by platform type (`mobile` or `desktop`) and category.
- * - The average grade for each category is calculated and rounded to the nearest integer.
- * - If no grades are available for a category, the average is set to `0`.
+ * @param performances - An array of `Performance` objects with Core Web Vitals metrics.
+ * @returns An object containing the performance distribution for both mobile and desktop platforms.
  */
-const getGradesDistribution = (heartbeats: Heartbeat[]) => {
-  /**
-   * Collect metrics p/category for mobile.
-   */
-  const mobile = heartbeats
-    .filter((heartbeat) => heartbeat.platform?.type === 'mobile')
-    .map((heartbeat) => heartbeat.grades)
-    .reduce(
-      (prev, current) => {
-        for (const category of categories) {
-          if (!prev[category]) {
-            prev[category] = [];
-          }
-          prev[category].push(current[category]);
-        }
-        return prev;
-      },
-      {} as Record<string, number[]>,
-    );
+const getGradesDistribution = (performances: Performance[]) => {
+  // Collect performance scores for mobile
+  const mobileScores = performances
+    .filter((performance) => performance.platform?.type === 'mobile')
+    .map((performance) => {
+      const lcpScore = performance.lcp
+        ? Math.max(0, 100 - performance.lcp / 25)
+        : 0;
+      const fcpScore = performance.fcp
+        ? Math.max(0, 100 - performance.fcp / 18)
+        : 0;
+      const clsScore = performance.cls
+        ? Math.max(0, 100 - parseFloat(performance.cls) * 100)
+        : 0;
+      return Math.round((lcpScore + fcpScore + clsScore) / 3);
+    });
 
-  /**
-   * Collect metrics p/category for desktop.
-   */
-  const desktop = heartbeats
-    .filter((heartbeat) => heartbeat.platform?.type === 'desktop')
-    .map((heartbeat) => heartbeat.grades)
-    .reduce(
-      (prev, current) => {
-        for (const category of categories) {
-          if (!prev[category]) {
-            prev[category] = [];
-          }
-          prev[category].push(current[category]);
-        }
-        return prev;
-      },
-      {} as Record<string, number[]>,
-    );
+  // Collect performance scores for desktop
+  const desktopScores = performances
+    .filter((performance) => performance.platform?.type === 'desktop')
+    .map((performance) => {
+      const lcpScore = performance.lcp
+        ? Math.max(0, 100 - performance.lcp / 25)
+        : 0;
+      const fcpScore = performance.fcp
+        ? Math.max(0, 100 - performance.fcp / 18)
+        : 0;
+      const clsScore = performance.cls
+        ? Math.max(0, 100 - parseFloat(performance.cls) * 100)
+        : 0;
+      return Math.round((lcpScore + fcpScore + clsScore) / 3);
+    });
 
-  /**
-   * Calculate their averages
-   */
-  const mobileAverages: Record<string, number> = {};
-  const desktopAverages: Record<string, number> = {};
-  categories.forEach((category) => {
-    mobileAverages[category] = Math.round(
-      (mobile[category] || []).reduce((a, b) => a + b, 0) /
-        (mobile[category]?.length || 1),
-    );
-    desktopAverages[category] = Math.round(
-      (desktop[category] || []).reduce((a, b) => a + b, 0) /
-        (desktop[category]?.length || 1),
-    );
-  });
+  // Calculate averages
+  const mobileAverage =
+    mobileScores.length > 0
+      ? Math.round(
+          mobileScores.reduce((a, b) => a + b, 0) / mobileScores.length,
+        )
+      : 0;
 
-  /**
-   * Final Formatting
-   */
+  const desktopAverage =
+    desktopScores.length > 0
+      ? Math.round(
+          desktopScores.reduce((a, b) => a + b, 0) / desktopScores.length,
+        )
+      : 0;
+
+  // Final Formatting - simplified since we only have overall performance now
   const gradesData = {
-    desktop: categories.map((category) => ({
-      metric: category,
-      value: desktopAverages[category] || 0,
-    })),
-    mobile: categories.map((category) => ({
-      metric: category,
-      value: mobileAverages[category] || 0,
-    })),
+    desktop: [
+      {
+        metric: 'performance',
+        value: desktopAverage,
+      },
+    ],
+    mobile: [
+      {
+        metric: 'performance',
+        value: mobileAverage,
+      },
+    ],
   };
 
   return gradesData;
 };
 
 /**
- * Transforms a `Heartbeat` object containing Core Web Vitals (CWV) data into a history object.
+ * Transforms a `Performance` object containing Core Web Vitals (CWV) data into a history object.
  *
- * @param {Heartbeat} heartbeat - A Heartbeat object containing the `cwv` property with Core Web Vitals data.
- * @returns {Object} A history object containing the following properties:
- * - `date` (Date): The last updated timestamp of the CWV data.
- * - `ttfb` (number): Time to First Byte.
- * - `fcp` (number): First Contentful Paint.
- * - `fid` (number): First Input Delay.
- * - `dcl` (number): DOM Content Loaded.
- * - `lcp` (number): Largest Contentful Paint.
- * - `tti` (number): Time to Interactive.
- * - `si` (number): Speed Index.
- * - `cls` (number): Cumulative Layout Shift.
- * - `tbt` (number): Total Blocking Time.
+ * @param {Performance} performance - A Performance object with Core Web Vitals metrics.
+ * @returns {Object} A history object containing CWV metrics.
  */
-const cwvToHistory = (heartbeat: Heartbeat) => {
-  if (!heartbeat || !heartbeat.cwv) {
+const cwvToHistory = (performance: Performance) => {
+  if (!performance) {
     return null;
   }
 
-  const { cwv, updatedAt } = heartbeat;
+  const recordedAt = performance.createdAt;
 
-  const year = updatedAt.getFullYear();
-  const month = (updatedAt.getMonth() + 1).toString().padStart(2, '0');
-  const day = updatedAt.getDate().toString().padStart(2, '0');
+  const year = recordedAt.getFullYear();
+  const month = (recordedAt.getMonth() + 1).toString().padStart(2, '0');
+  const day = recordedAt.getDate().toString().padStart(2, '0');
   const formattedDate = `${year}-${month}-${day}`;
 
   return {
     date: formattedDate,
-    ttfb: cwv.ttfb || 0,
-    fcp: cwv.fcp || 0,
-    dcl: cwv.dcl || 0,
-    lcp: cwv.lcp || 0,
-    tti: cwv.tti || 0,
-    si: cwv.si || 0,
-    cls: parseFloat(cwv.cls || '0').toFixed(3),
-    tbt: cwv.tbt || 0,
+    ttfb: performance.ttfb || 0,
+    fcp: performance.fcp || 0,
+    dcl: performance.dcl || 0,
+    lcp: performance.lcp || 0,
+    tti: performance.tti || 0,
+    si: performance.si || 0,
+    cls: parseFloat(performance.cls || '0').toFixed(3),
+    tbt: performance.tbt || 0,
   };
 };
 
 /**
- * Processes an array of heartbeats and categorizes them into desktop and mobile histories.
+ * Processes an array of performance records and categorizes them into desktop and mobile histories.
  *
- * @param heartbeats - An array of `Heartbeat` objects to be processed.
+ * @param performances - An array of `Performance` objects to be processed.
  * @returns An object containing two arrays:
- * - `desktop`: An array of processed desktop heartbeats.
- * - `mobile`: An array of processed mobile heartbeats.
+ * - `desktop`: An array of processed desktop performance records.
+ * - `mobile`: An array of processed mobile performance records.
  */
-const getHistory = (heartbeats: Heartbeat[]) => {
+const getHistory = (performances: Performance[]) => {
   return {
-    desktop: heartbeats
-      .filter((heartbeat) => heartbeat.platform?.type === 'desktop')
-      .map(cwvToHistory),
-    mobile: heartbeats
-      .filter((heartbeat) => heartbeat.platform?.type === 'mobile')
-      .map(cwvToHistory),
+    desktop: performances
+      .filter((performance) => performance.platform?.type === 'desktop')
+      .map(cwvToHistory)
+      .filter((item) => item !== null),
+    mobile: performances
+      .filter((performance) => performance.platform?.type === 'mobile')
+      .map(cwvToHistory)
+      .filter((item) => item !== null),
   };
 };
 
@@ -493,8 +444,6 @@ const getHistory = (heartbeats: Heartbeat[]) => {
  *
  * This function ensures that only URLs with a sufficient number of datapoints are considered
  * for stability statistics, avoiding skewed rankings due to insufficient data.
- *
- * You must be "this" tall to ride this ride.
  *
  * @param stability - The `StabilityObject` containing `mobile` and `desktop` arrays to be filtered.
  * @returns The updated `StabilityObject` with filtered `mobile` and `desktop` arrays.

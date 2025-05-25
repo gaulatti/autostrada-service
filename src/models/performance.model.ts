@@ -9,14 +9,18 @@ import {
   Table,
   UpdatedAt,
 } from 'sequelize-typescript';
-import { Heartbeat } from './heartbeat.model';
+import { Platform } from './platform.model';
+import { Provider } from './provider.model';
+import { Url } from './url.model';
 
 /**
- * Define the full attributes of the model
+ * Define the full attributes of the Performance model
  */
-export interface CoreWebVitalsAttributes {
+export interface PerformanceAttributes {
   id: number;
-  heartbeats_id: number;
+  url_id: number;
+  platforms_id: number;
+  provider_id: number;
   ttfb: number;
   fcp: number;
   dcl: number;
@@ -32,19 +36,19 @@ export interface CoreWebVitalsAttributes {
 /**
  * Define the attributes needed when creating a new record
  */
-export type CoreWebVitalsCreationAttributes = Optional<
-  CoreWebVitalsAttributes,
+export type PerformanceCreationAttributes = Optional<
+  PerformanceAttributes,
   'id' | 'createdAt' | 'updatedAt'
 >;
 
 @Table({
-  tableName: 'cwv',
+  tableName: 'performance',
   timestamps: true,
   underscored: true,
 })
-export class CoreWebVitals
-  extends Model<CoreWebVitalsAttributes, CoreWebVitalsCreationAttributes>
-  implements CoreWebVitalsAttributes
+export class Performance
+  extends Model<PerformanceAttributes, PerformanceCreationAttributes>
+  implements PerformanceAttributes
 {
   @Column({
     type: DataType.INTEGER,
@@ -53,12 +57,26 @@ export class CoreWebVitals
   })
   id!: number;
 
-  @ForeignKey(() => Heartbeat)
+  @ForeignKey(() => Url)
   @Column({
     type: DataType.INTEGER,
     allowNull: false,
   })
-  heartbeats_id!: number;
+  url_id!: number;
+
+  @ForeignKey(() => Platform)
+  @Column({
+    type: DataType.INTEGER,
+    allowNull: false,
+  })
+  platforms_id!: number;
+
+  @ForeignKey(() => Provider)
+  @Column({
+    type: DataType.INTEGER,
+    allowNull: false,
+  })
+  provider_id!: number;
 
   @Column({
     type: DataType.INTEGER,
@@ -124,6 +142,13 @@ export class CoreWebVitals
   @Column({ field: 'updated_at', type: DataType.DATE })
   updatedAt!: Date;
 
-  @BelongsTo(() => Heartbeat)
-  heartbeat?: Heartbeat;
+  // Define associations
+  @BelongsTo(() => Url)
+  url?: Url;
+
+  @BelongsTo(() => Platform)
+  platform?: Platform;
+
+  @BelongsTo(() => Provider)
+  provider?: Provider;
 }
