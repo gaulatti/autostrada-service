@@ -219,6 +219,4 @@ const syncDatabase = async (): Promise<void> => {
   console.log(`Database backup applied from ${backupSql}`);
 };
 
-syncDatabase().catch((err) => {
-  console.error('Error during database synchronization:', err);
-});
+export { fetchDatabaseCredentials };

@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/sequelize';
 import { Cluster } from 'src/models/cluster.model';
 import { Url } from 'src/models/url.model';
+import { getClusterStability, getPlatformDifferences } from 'src/utils/stats';
+import { Op } from 'sequelize';
 
 @Injectable()
 export class ClustersService {
@@ -44,18 +46,49 @@ export class ClustersService {
    * @returns An object containing empty statistical data (placeholder).
    */
   async stats(from: Date, to: Date): Promise<any> {
-    // TODO: Implement stats functionality using performance records directly
-    // For now, return empty placeholder data
-    console.log(
-      `Stats requested for range: ${from.toISOString()} to ${to.toISOString()}`,
-    );
-
-    return Promise.resolve({
-      stability: {
-        mobile: [],
-        desktop: [],
-        differences: [],
-      },
+    // Find all clusters with their URLs and performances in the date range
+    const clusters = await this.clusterModel.findAll({
+      include: [
+        {
+          model: Url,
+          as: 'urls',
+          include: [
+            {
+              association: 'performances',
+              where: {
+                createdAt: { [Op.between]: [from, to] },
+              },
+              required: false,
+            },
+          ],
+        },
+      ],
     });
+
+    // Flatten all performances and attach cluster info
+    const performances: any[] = [];
+    for (const cluster of clusters) {
+      for (const url of cluster.urls || []) {
+        for (const perf of url.performances || []) {
+          performances.push({ ...perf.toJSON(), cluster });
+        }
+      }
+    }
+
+    // Compute cluster stability
+    const clusterStability = getClusterStability(performances);
+    clusterStability.sort((a, b) => a.variation - b.variation);
+    const differences = getPlatformDifferences({
+      desktop: clusterStability,
+      mobile: clusterStability,
+    });
+
+    return {
+      stability: {
+        desktop: clusterStability.slice(0, 3),
+        mobile: clusterStability.slice(0, 3),
+        differences: differences.slice(0, 3),
+      },
+    };
   }
 }

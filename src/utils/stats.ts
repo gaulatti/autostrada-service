@@ -471,6 +471,33 @@ const minDatapointsFilter = (stability: StabilityObject) => {
   return stability;
 };
 
+/**
+ * Calculates percentile statistics (min, p50, avg, p75, p90, p99, max) for an array of numbers.
+ * @param values Array of numbers to calculate statistics for
+ * @returns An object with min, p50, avg, p75, p90, p99, max
+ */
+const calculatePercentileStats = (values: number[]) => {
+  if (!values.length) {
+    return { min: 0, p50: 0, avg: 0, p75: 0, p90: 0, p99: 0, max: 0 };
+  }
+  const sorted = [...values].sort((a, b) => a - b);
+  const len = sorted.length;
+  const getPercentile = (percentile: number) => {
+    const index = Math.ceil((percentile / 100) * len) - 1;
+    return sorted[Math.max(0, Math.min(index, len - 1))];
+  };
+  const avg = values.reduce((sum, val) => sum + val, 0) / len;
+  return {
+    min: sorted[0],
+    p50: getPercentile(50),
+    avg: Math.round(avg * 100) / 100,
+    p75: getPercentile(75),
+    p90: getPercentile(90),
+    p99: getPercentile(99),
+    max: sorted[len - 1],
+  };
+};
+
 export {
   getAveragePerformance,
   getClusterStability,
@@ -481,4 +508,5 @@ export {
   getTimeOfDayPerformance,
   getUrlsMonitored,
   minDatapointsFilter,
+  calculatePercentileStats,
 };

@@ -11,6 +11,7 @@ import {
   getPlatformDifferences,
   getTimeOfDayPerformance,
   getHistory,
+  calculatePercentileStats,
 } from 'src/utils/stats';
 
 // Reusable type for CWV stats summary
@@ -322,7 +323,6 @@ export class PerformanceService {
     count: number;
   } {
     if (rows.length === 0) {
-      // Return zeros for all stats when no data
       const emptyStats = {
         min: 0,
         p50: 0,
@@ -346,35 +346,6 @@ export class PerformanceService {
         count: 0,
       };
     }
-
-    // Helper function to calculate percentile statistics for an array of values
-    const calculateStats = (values: number[]) => {
-      if (values.length === 0) {
-        return { min: 0, p50: 0, avg: 0, p75: 0, p90: 0, p99: 0, max: 0 };
-      }
-
-      const sorted = [...values].sort((a, b) => a - b);
-      const len = sorted.length;
-
-      const getPercentile = (percentile: number) => {
-        const index = Math.ceil((percentile / 100) * len) - 1;
-        return sorted[Math.max(0, Math.min(index, len - 1))];
-      };
-
-      const avg = values.reduce((sum, val) => sum + val, 0) / len;
-
-      return {
-        min: sorted[0],
-        p50: getPercentile(50),
-        avg: Math.round(avg * 100) / 100, // Round to 2 decimal places
-        p75: getPercentile(75),
-        p90: getPercentile(90),
-        p99: getPercentile(99),
-        max: sorted[len - 1],
-      };
-    };
-
-    // Extract arrays of values for each metric
     const ttfbValues = rows.map((row) => row.ttfb);
     const fcpValues = rows.map((row) => row.fcp);
     const dclValues = rows.map((row) => row.dcl);
@@ -383,17 +354,16 @@ export class PerformanceService {
     const siValues = rows.map((row) => row.si);
     const clsValues = rows.map((row) => parseFloat(row.cls));
     const tbtValues = rows.map((row) => row.tbt);
-
     return {
       stats: {
-        ttfb: calculateStats(ttfbValues),
-        fcp: calculateStats(fcpValues),
-        dcl: calculateStats(dclValues),
-        lcp: calculateStats(lcpValues),
-        tti: calculateStats(ttiValues),
-        si: calculateStats(siValues),
-        cls: calculateStats(clsValues),
-        tbt: calculateStats(tbtValues),
+        ttfb: calculatePercentileStats(ttfbValues),
+        fcp: calculatePercentileStats(fcpValues),
+        dcl: calculatePercentileStats(dclValues),
+        lcp: calculatePercentileStats(lcpValues),
+        tti: calculatePercentileStats(ttiValues),
+        si: calculatePercentileStats(siValues),
+        cls: calculatePercentileStats(clsValues),
+        tbt: calculatePercentileStats(tbtValues),
       },
       count: rows.length,
     };

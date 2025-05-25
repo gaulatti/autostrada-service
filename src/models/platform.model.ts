@@ -13,7 +13,7 @@ import {
   timestamps: true,
   underscored: true,
 })
-export class Platform extends Model<Platform, CreationOptional<Platform>> {
+export class Platform extends Model<Platform> {
   @Column({
     type: DataType.INTEGER,
     primaryKey: true,

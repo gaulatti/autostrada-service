@@ -30,23 +30,6 @@ export class UrlsController {
   }
 
   /**
-   * Retrieves statistical data for urls within a specified date range.
-   * COMMENTED OUT: Global stats endpoint removed in favor of performance service global stats
-   *
-   * @param from - The start date for the statistics query. Defaults to the current date if not provided.
-   * @param to - The end date for the statistics query. Defaults to the current date if not provided.
-   * @returns A promise resolving to the statistical data for the specified date range.
-   */
-  // @Get('/stats')
-  // @Public()
-  // stats(
-  //   @Query('from') from: Date = new Date(),
-  //   @Query('to') to: Date = new Date(),
-  // ) {
-  //   return this.urlsService.stats(from, to);
-  // }
-
-  /**
    * Retrieves performance statistics for a specific URL within a date range.
    * Optionally filters by platform and/or provider.
    *

@@ -66,4 +66,6 @@ async function bootstrap(): Promise<void> {
   Logger.log(`🚀 REST API running on port ${httpPort}`);
 }
 
-bootstrap();
+if (require.main === module) {
+  bootstrap();
+}

@@ -11,6 +11,7 @@ import {
 } from 'sequelize-typescript';
 import { Cluster } from './cluster.model';
 import { Junction } from './junction.model';
+import { Performance } from './performance.model';
 
 @Table({
   tableName: 'urls',
@@ -43,6 +44,9 @@ export class Url extends Model<Url, CreationOptional<Url>> {
 
   @BelongsToMany(() => Cluster, () => Junction)
   clusters!: Cluster[];
+
+  @HasMany(() => Performance, { as: 'performances', foreignKey: 'url_id' })
+  performances!: Performance[];
 
   @CreatedAt
   @Column({ field: 'created_at', type: DataType.DATE })
