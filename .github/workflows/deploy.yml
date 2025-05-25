@@ -73,6 +73,8 @@ jobs:
             LOG_STREAM_UUID=$(uuidgen)
 
             docker run -d --name autostrada \
+            --memory=256m \
+            --memory-swap=256m \
             -p ${{ vars.HTTP_PORT }}:${{ vars.HTTP_PORT }} \
             -p ${{ vars.GRPC_PORT }}:${{ vars.GRPC_PORT }} \
             -e AWS_REGION=${{ vars.AWS_REGION }} \
