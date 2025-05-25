@@ -26,7 +26,7 @@ module.exports = {
       }
 
       // Check and remove heartbeats_id columns from any tables that might have them
-      const tablesToCheck = ['performance', 'cwv'];
+      const tablesToCheck = ['performance'];
       
       for (const tableName of tablesToCheck) {
         try {
