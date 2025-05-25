@@ -17,11 +17,11 @@ module.exports = {
 
       // Remove each foreign key constraint
       for (const fk of foreignKeys) {
-        console.log(`Removing foreign key constraint ${fk.CONSTRAINT_NAME} from table ${fk.TABLE_NAME}`);
+        queryInterface.sequelize.log(`Removing foreign key constraint ${fk.CONSTRAINT_NAME} from table ${fk.TABLE_NAME}`);
         try {
           await queryInterface.removeConstraint(fk.TABLE_NAME, fk.CONSTRAINT_NAME);
         } catch (error) {
-          console.log(`Could not remove constraint ${fk.CONSTRAINT_NAME}:`, error.message);
+          queryInterface.sequelize.log(`Could not remove constraint ${fk.CONSTRAINT_NAME}: ${error.message}`);
         }
       }
 
