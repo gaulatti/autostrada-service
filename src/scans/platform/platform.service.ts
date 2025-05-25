@@ -57,4 +57,16 @@ export class PlatformService {
       /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i;
     return mobileRegex.test(userAgent) ? 'mobile' : 'desktop';
   };
+
+  /**
+   * Retrieves a platform instance by its slug.
+   *
+   * @param slug - The platform slug to search for.
+   * @returns A promise that resolves to the platform instance or null if not found.
+   */
+  async getBySlug(slug: string) {
+    return this.platformModel.findOne({
+      where: { slug },
+    });
+  }
 }

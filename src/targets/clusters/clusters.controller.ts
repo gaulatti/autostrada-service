@@ -1,16 +1,12 @@
 import { Controller, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
 import { Logger } from 'src/decorators/logger.decorator';
 import { Public } from 'src/decorators/public.decorator';
-import { PulsesService } from 'src/scans/pulses/pulses.service';
 import { JSONLogger } from 'src/utils/logger';
 import { ClustersService } from './clusters.service';
 
 @Controller('clusters')
 export class ClustersController {
-  constructor(
-    private readonly clustersService: ClustersService,
-    private readonly pulsesService: PulsesService,
-  ) {}
+  constructor(private readonly clustersService: ClustersService) {}
 
   /**
    * Logger instance for logging messages.
@@ -42,19 +38,9 @@ export class ClustersController {
    */
   @Get(':slug')
   @Public()
-  async find(
-    @Param('slug') slug: string,
-    @Query('from') from: Date = new Date(),
-    @Query('to') to: Date = new Date(),
-  ): Promise<{ [key: string]: any }> {
+  async find(@Param('slug') slug: string): Promise<{ [key: string]: any }> {
     const cluster = await this.clustersService.get(slug);
-    const urls = cluster!.urls.map((url) => url.id);
-
-    const stats = await this.pulsesService.stats(from, to, {
-      url_id: urls,
-    });
-
-    return { ...cluster!.toJSON(), stats };
+    return cluster!.toJSON();
   }
 
   /**

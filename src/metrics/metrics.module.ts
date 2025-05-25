@@ -1,14 +1,14 @@
-import { Module } from '@nestjs/common';
+import { forwardRef, Module } from '@nestjs/common';
 import { DalModule } from 'src/dal/dal.module';
-import { CwvController } from './cwv/cwv.controller';
-import { CwvService } from './cwv/cwv.service';
-import { GradesController } from './grades/grades.controller';
-import { GradesService } from './grades/grades.service';
+import { ScansModule } from 'src/scans/scans.module';
+import { TargetsModule } from 'src/targets/targets.module';
+import { PerformanceController } from './performance/performance.controller';
+import { PerformanceService } from './performance/performance.service';
 
 @Module({
-  imports: [DalModule],
-  providers: [GradesService, CwvService],
-  controllers: [GradesController, CwvController],
-  exports: [GradesService, CwvService],
+  imports: [DalModule, ScansModule, forwardRef(() => TargetsModule)],
+  providers: [PerformanceService],
+  controllers: [PerformanceController],
+  exports: [PerformanceService],
 })
 export class MetricsModule {}
