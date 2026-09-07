@@ -1,129 +1,56 @@
-# Autostrada Backend Service
+# Autostrada backend service
 
-[![codecov](https://codecov.io/gh/gaulatti/autostrada-service/graph/badge.svg?token=LbN4ANwMAK)](https://codecov.io/gh/gaulatti/autostrada-service)
+> **Disposition: retained recovery and maintenance surface.** This repository is
+> the historical source and delivery owner for the API edge at
+> [`api.autostrada.gaulatti.com`](https://api.autostrada.gaulatti.com). The edge
+> is live, but application and database health are not currently proven. Do not
+> deploy from this repository until the blocked recovery work is complete. See
+> [OWNERSHIP.md](OWNERSHIP.md) for the evidence, ownership, and rollback contract.
 
-A robust **NestJS** backend service powering the Autostrada web performance monitoring platform. Built with TypeScript, this service provides secure API endpoints for tracking, analyzing, and reporting website performance metrics collected via Google PageSpeed Insights and Lighthouse reports.
+This is the NestJS backend for the Autostrada web-performance application. Its
+source, migrations, and tests are retained because the frontend still names the
+API and historical delivery evidence ties this repository to the service log.
+That evidence does not establish that the current nginx-gated endpoint is
+serving a healthy application.
 
-## Description
+## Current delivery state
 
-The Autostrada Backend Service is the core component of the Autostrada platform, responsible for:
+Automatic deployment has been removed from the repository workflow. The old
+push-to-`main` job depended on a registry that is no longer present and on a
+legacy long-lived AWS identity. Its server-side workflow was also disabled
+manually so it cannot run before this pull request is merged. Re-enabling
+delivery is blocked by:
 
-1. **Managing Performance Data**: Storing and processing website performance data collected from various sources
-2. **Authentication & Authorization**: Handling user authentication through AWS Cognito integration
-3. **API Endpoints**: Providing RESTful and gRPC endpoints for the frontend and other services to consume
-4. **Data Analysis**: Processing and analyzing performance metrics to generate insights
-5. **Integration**: Communicating with other microservices (like the Autostrada Plugin) to coordinate data collection and processing
+- [`gaulatti/autostrada#2`](https://github.com/gaulatti/autostrada/issues/2),
+  which owns infrastructure drift, credential-output removal, and migration to
+  short-lived deployment credentials; and
+- [`gaulatti/autostrada-service#3`](https://github.com/gaulatti/autostrada-service/issues/3),
+  which owns an immutable release, application health proof, and rollback drill.
 
-## Project Setup
+Merging a pull request runs CI only. It must not build, publish, restart, or
+replace the live service.
 
-Before running the service, ensure you have the required environment variables configured in a `.env` file. You can use the `.env.template` as a starting point:
+## Local verification
 
-```bash
-# Clone the repository
-git clone https://github.com/gaulatti/autostrada.git
-cd autostrada/service
-
-# Install dependencies
-npm install
-
-# Create .env file from template
-cp .env.template .env
-# Edit the .env file with your specific configuration
-
-# Run database migrations
-npm run db:migrate
-```
-
-## Running the Service
-
-The service can be run in various modes depending on your needs:
+Local development still uses the historical Node/NestJS toolchain:
 
 ```bash
-# Development mode
-npm run start
-
-# Watch mode with auto-reload
-npm run start:dev
-
-# Production mode
-npm run start:prod
+npm ci
+npm run build
+npm test -- --runInBand
+npx eslint '{src,apps,libs,test}/**/*.ts'
 ```
 
-## Database Management
+Environment names are listed in [`.env.template`](.env.template). Never commit
+values, copy the retired deployment identity, or treat the template as a
+production secret-distribution contract.
 
-Autostrada uses Sequelize as an ORM for database interactions:
+## Safe change boundary
 
-```bash
-# Run database migrations
-npm run db:migrate
-
-# Sync database schema (development only)
-npm run db:sync
-```
-
-## Docker Deployment
-
-A Dockerfile is provided for containerized deployment:
-
-```bash
-# Build Docker image
-docker build -t autostrada-service .
-
-# Run container
-docker run -p 3000:3000 -p 50051:50051 --env-file .env autostrada-service
-```
-
-## Testing
-
-The service includes comprehensive test coverage:
-
-```bash
-# Run unit tests
-npm run test
-
-# Run end-to-end tests
-npm run test:e2e
-
-# Generate test coverage report
-npm run test:cov
-```
-
-## Key Components
-
-### 1. Core Modules
-- **Authentication**: Integrates with AWS Cognito for secure user authentication
-- **Models**: Defines data models for performance metrics, scans, targets, etc.
-- **API Controllers**: Exposes RESTful endpoints for frontend consumption
-
-### 2. Scanning Framework
-- **Scan Orchestration**: Coordinates with the Plugin service to run performance scans
-- **Results Processing**: Processes and stores scan results
-- **Scheduling**: Manages scan scheduling and triggers
-
-### 3. Analytics Engine
-- **Metrics Aggregation**: Collects and aggregates performance metrics
-- **Trend Analysis**: Identifies performance trends over time
-- **Reporting**: Generates reports on website performance
-
-## Environment Variables
-
-The service requires several environment variables for proper operation:
-
-| Variable             | Description                                       |
-|----------------------|---------------------------------------------------|
-| AWS_ACCOUNT_ID       | AWS account identifier                            |
-| AWS_REGION           | AWS region for services                           |
-| COGNITO_USER_POOL_ID | AWS Cognito user pool ID for authentication       |
-| DB_CREDENTIALS       | Database connection credentials                   |
-| DB_DATABASE          | Database name                                     |
-| DB_HOST              | Database host address                             |
-| DB_PASSWORD          | Database password                                 |
-| DB_PORT              | Database port                                     |
-| DB_USERNAME          | Database username                                 |
-| SERVICE_FQDN         | Fully qualified domain name for the service       |
-| GRPC_PORT            | Port for gRPC communication                       |
-| HTTP_PORT            | Port for HTTP API                                 |
-
-## Contributing
-
-Contributions to the Autostrada backend service are welcome. Please follow the project's coding standards and submit pull requests for review.
+- Preserve migrations and history until a database recovery owner proves they
+  are no longer needed.
+- Do not infer backend health from DNS, TLS, or nginx responses.
+- Do not archive this repository while the API hostname and frontend dependency
+  remain.
+- Do not restore automatic deployment without the acceptance evidence in issue
+  #3.
