@@ -7,13 +7,21 @@ Default branch and audited commit: `main` at
 
 ## Decision
 
+External API, AWS, DNS, HTTP, TLS, credential-correlation and consumer statements
+are unverified September reports: their original command receipts are
+unavailable. They do not prove current ownership, resource existence, absence,
+credential validity or health. Retaining source avoids treating unknown recovery
+dependencies as safely decommissioned. Current source and CI evidence are
+recorded separately.
+
 **Disposition: retained recovery and maintenance surface.**
 
 This repository is not a healthy-product claim. It is retained because the
-live API hostname, frontend configuration, historical delivery identity use,
-and service log timeline still point at this source and delivery contract. The
+reported API hostname, frontend configuration, historical delivery identity use,
+and service log timeline described this source and delivery contract. The
 application and database behind nginx could not be proven healthy, the declared
-ECR repository is absent, and the last service-log ingestion was 2025-10-20.
+ECR repository was reported absent, and the reported last service-log ingestion
+was 2025-10-20.
 Archival or a superseded designation would discard the only identified backend
 source and migrations while live dependencies remain.
 
@@ -35,7 +43,7 @@ deploy.
 | Secrets owner | The `gaulatti` repository owner through GitHub Actions secret metadata plus the Autostrada infrastructure owner; values are not part of this document |
 | Build and test | `npm ci`, `npm run build`, `npm test -- --runInBand`, then non-mutating ESLint |
 | Release path | None currently approved. The historical automatic deployment is disabled; [`autostrada-service#3`](https://github.com/gaulatti/autostrada-service/issues/3) owns restoration after the infrastructure gate. |
-| Health proof | DNS, TLS, and nginx only. Root redirects and application paths return nginx-owned responses; no NestJS or database health response was proven. |
+| Historical health report | September notes describe DNS, TLS, and nginx only. Root redirects and application paths return nginx-owned responses; no NestJS or database health response was proven. |
 | Recovery and rollback | Preserve Git history and migrations. The last image digest and live container identity are unavailable because ECR is absent; no release or rollback is authorized until issue #3 records both immutable identities and exercises rollback. |
 
 ## Evidence
@@ -79,12 +87,12 @@ After this audit:
 
 No application deployment, AWS mutation, credential use or rotation, DNS
 change, package deletion, repository archive action, or history rewrite was
-performed. Read-only stack inspection revealed the credential-valued output;
+performed. The September notes report credential-valued stack outputs;
 the value is not reproduced in this repository, its issues, or the pull request.
 
 ## Residual risks and unknowns
 
-- The nginx edge is current, but no unauthenticated route distinguishes proxy,
+- Current edge behavior is unverified; no proven route distinguishes proxy,
   application, and database health.
 - The live container image, source SHA, process status, database location,
   backup state, and authenticated behavior remain unverified.

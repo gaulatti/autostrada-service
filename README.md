@@ -3,7 +3,8 @@
 > **Disposition: retained recovery and maintenance surface.** This repository is
 > the historical source and delivery owner for the API edge at
 > [`api.autostrada.gaulatti.com`](https://api.autostrada.gaulatti.com). The edge
-> is live, but application and database health are not currently proven. Do not
+> was reported reachable in September; current edge, application and database
+> health remain unverified. Do not
 > deploy from this repository until the blocked recovery work is complete. See
 > [OWNERSHIP.md](OWNERSHIP.md) for the evidence, ownership, and rollback contract.
 
@@ -13,10 +14,14 @@ API and historical delivery evidence ties this repository to the service log.
 That evidence does not establish that the current nginx-gated endpoint is
 serving a healthy application.
 
-## Current delivery state
+Original external audit receipts were not retained. September cloud, HTTP,
+consumer and operational reports below are historical and unverified; the
+retention decision preserves source without asserting current live state.
+
+## Current source delivery state
 
 Automatic deployment has been removed from the repository workflow. The old
-push-to-`main` job depended on a registry that is no longer present and on a
+push-to-`main` job names a registry reported absent in September and a
 legacy long-lived AWS identity. Its server-side workflow was also disabled
 manually so it cannot run before this pull request is merged. Re-enabling
 delivery is blocked by:
